@@ -110,7 +110,7 @@
         },
         "app":{
             "name":"Main Code",
-            "production":false,
+            "production":true,
             "components":[
                 "{lib}components/dialog",    
                 "{lib}components/select",    
