@@ -51,7 +51,6 @@ app.ready().then(function()
                 homePage.routing.goTo("/dashboard");
                 app.uiReady();
             });                    
-            app.uiReady();    
         });
     });
 });

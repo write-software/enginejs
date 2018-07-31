@@ -18,9 +18,9 @@
         ],
         "core":[ 
             "{lib}common",
-            "{lib}jsonpath",
+            "{lib}jsonpath.min",
             "{lib}md5",
-            "{lib}handlebars.min.js",    
+            "{lib}handlebars.min",    
             "{lib}vendors/pouch/pouchdb",
             "{lib}vendors/momentjs/moment",
             "{lib}vendors/jslinq/JSLINQ",
