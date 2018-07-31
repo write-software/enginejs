@@ -37,23 +37,16 @@ date_default_timezone_set('Europe/London');
 ini_set('memory_limit', '640M');
 
 $path = realpath(dirname(__FILE__));
-$pwd = "Solutions!";
 $ini = new ini();
 
 $ini->read($path . "/setup.ini");
 $prodname = $ini->get('CONFIG', 'name', "DW WiFi");
 $pwd = $ini->get('CONFIG', 'pwd', $pwd);
 $server = $ini->get('CONFIG', 'server', "");
-define("_BASEDB", "dw");
 define("_SERVERNAME", $prodname);
-define("_ACCOUNT", "dw");
-define("_PINCODE", "20180000");
-define("_DBCODE", "20180000");
 define("_DBTYPE", "mysql");
 define("_DBHOST", "127.0.0.1");
 define("_DBPORT", ":3306");
-define("_DBUSER", "root");
+define("_DBUSER", "enginejs");
 define("_DBPASS", $pwd);
-define("_DBNAME", _BASEDB . "_" . _DBCODE);
-define("_SAAS","saas");
 ?>

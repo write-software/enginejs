@@ -15,11 +15,13 @@ function stdout ($msg)
 
 class myAPIs extends baseAPIClass
 {
-    var $dbname = _SAAS;
+    var $dbname = "";
 
     public function init()
     {
-        $this->dbname = "dw_20180000";
+        // Prep the database name here
+        
+        $this->dbname = "enginejs";
         return true;
     }
     //-----------------------------------------------------------------------------    
