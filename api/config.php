@@ -40,7 +40,7 @@ $path = realpath(dirname(__FILE__));
 $ini = new ini();
 
 $ini->read($path . "/setup.ini");
-$prodname = $ini->get('CONFIG', 'name', "DW WiFi");
+$prodname = $ini->get('CONFIG', 'name', "Engine JS");
 $pwd = $ini->get('CONFIG', 'pwd', $pwd);
 $server = $ini->get('CONFIG', 'server', "");
 define("_SERVERNAME", $prodname);
