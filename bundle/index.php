@@ -12,22 +12,20 @@ require_once 'FileBundler.php';
 </head>
 
 <body>
-	<h1>Bundler</h1>
+	<h1>Engine JS Bundler</h1>
 	<?php
 		// create bundler for JavaScript files
 		$jsBundler = new FileBundler(array(
-			"type"=>"js",
 			"debugMode"=>true,
-			"approot"=>"/www",
-			"sourceDir"=>"../app/js",
-			"bundleDir"=>"/production"
+			"sourceDir"=>"../app/",
+			"bundleDir"=>"../production/"
 		)); 
 
 		// add single file to bundle
-		$jsBundler->addFile("../apps/scripts/models.js");
+		$jsBundler->addFile("../app/scripts/models.js");
 
 		// add multiple files to bundle
-		$jsFiles = array("../apps/scripts/dialogs.js", "../apps/controllers/components.js");
+		$jsFiles = array("../app/scripts/dialogs.js", "../app/controllers/components.js");
 		$jsBundler->addFiles($jsFiles);
 
 		// create new (or reuse if existing) bundle

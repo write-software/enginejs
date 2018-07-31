@@ -30,24 +30,26 @@
  * Changes to source code therefore require deleting old, outdated bundles.
  */
 define("ENABLE_HEAD_INCLUDE_BUNDLES", true); // this should go into a config file and be used to dis/en-able bundling
- 
+
+require_once '../api/classes/packer.php';
+
 class FileBundler 
 {
 		private $type;  // "js" | "css"
 		private $files = array();
-		private $approot = ""; // root directory of web application
+		private $approot = "/"; // root directory of web application
 		private $sourceDir = "";
 		private $bundleDir = "";
-		private $debugMode;
+		private $debugMode = true;
 		private $compress;
-		private $optimizer; // "jsmin" | "packer"
+		private $optimizer = "packer";
 		
 		
 		
 		/* PRIVATE METHODS ------------------------------------------------ */
 		
 		private function log($message){
-			if ($this->debugMode){ error_log("*** FileBundler ***: $message"); }
+			if ($this->debugMode){ echo("*** FileBundler ***: $message<br>"); }
 		}
 		
 		private function getBundleWebDir(){
@@ -55,7 +57,7 @@ class FileBundler
 		}
 			
 		private function getBundleSysDir(){
-			return $approot.$this->getBundleWebDir();
+			return $this->getBundleWebDir();
 		}
 	
 		/**
@@ -71,21 +73,8 @@ class FileBundler
 		}
 		
 		private function compressJavaScriptBundle($code){
-			$compressedCode;
-			switch ($this->optimizer){
-				case "jsmin" :
-					require_once 'jsmin-1.1.1.php';
-					$compressedCode = JSMin::minify($code);
-					break;
-				case "packer" :
-					require_once 'class.JavaScriptPacker.php';
-					$packer = new JavaScriptPacker($code, 'Normal', true, false);
-					$compressedCode = $packer->pack();
-					break;
-				default : 
-					$this->log("Unknown JavaScript optimizer was specified");
-					break;
-			}
+			$packer = new Packer($code, 'Normal', true, false);
+			$compressedCode = $packer->pack();
 			return $compressedCode;
 		}
 		
@@ -111,7 +100,7 @@ class FileBundler
 			$this->type      = isset($props['type'])      ? $props['type']      : "js";  // default file type is js (JavaScript)
 			$this->debugMode = isset($props['debugMode']) ? $props['debugMode'] : false; // set debugMode to true for useful trace messages
 			$this->compress  = isset($props['compress'])  ? $props['compress']  : true;  // when compress is set to false no bundling takes place.  individual files are included
-			$this->optimizer = isset($props['optimizer']) ? $props['optimizer'] : "jsmin"; // "jsmin" or "packer"
+			$this->optimizer = isset($props['optimizer']) ? $props['optimizer'] : "packer"; // "jsmin" or "packer"
 			$this->approot   = isset($props['approot'])   ? $props['approot']   : ""; // application root
 			$this->sourceDirs = isset($props['sourceDir']) ? $props['sourceDir'] : "/{$this->type}"; // source directory, ex: "/scripts"
 			$this->bundleDir = isset($props['bundleDir']) ? $props['bundleDir'] : "/{$this->type}/bundles";  // bundle directory 
@@ -142,14 +131,9 @@ class FileBundler
 			$this->log("Adding files: " . implode(",",$files));
 			$filesWithRootRelativePaths = array();
 			for ($i=0; $i<count($files); $i++){
-				if (substr($files[$i],0,1)!="/"){
-					$filesWithRootRelativePaths[] = $this->sourceDirs[$this->type].$files[$i];
-				}
-				else {
-					$filesWithRootRelativePaths[] = $files[$i];
-				}
+				$filesWithRootRelativePaths[] = $files[$i];
 				
-				if (!is_file($approot.$filesWithRootRelativePaths[count($filesWithRootRelativePaths)-1])){
+				if (!is_file($filesWithRootRelativePaths[count($filesWithRootRelativePaths)-1])){
 					$this->log($filesWithRootRelativePaths[count($filesWithRootRelativePaths)-1] . " doesn't exist. removing from bundle.");
 					array_pop($filesWithRootRelativePaths);
 				}
@@ -177,7 +161,7 @@ class FileBundler
 						
 			if (ENABLE_HEAD_INCLUDE_BUNDLES){
 				
-				$bundleName    = $this->generateBundleFilename();
+				$bundleName    = "bundle.js";
 				$bundleSysPath = $this->getBundleSysDir().$bundleName;
 				
 				if (!is_file($bundleSysPath) || $overwrite){ // if bundle doesn't exist
@@ -188,7 +172,7 @@ class FileBundler
 					$code     = "";
 
 					foreach ($this->files as $file){
-						$code .= file_get_contents($approot.$file);
+						$code .= file_get_contents($file);
 					}
 					
 					if ($this->compress){
@@ -206,7 +190,7 @@ class FileBundler
 								break;
 						}
 					}
-					file_put_contents($bundleSysPath, $fileList.$thirdPartyCode.$code);
+					file_put_contents($bundleSysPath, $fileList . $code);
 				}
 				
 				switch ($this->type){
