@@ -1,0 +1,357 @@
+@import "https://fonts.googleapis.com/css?family=Lato|Raleway|Indie Flower:300,400,500,600,700";
+
+body {
+    font-family: 'Lato', sans-serif;
+    background: #fafafa;
+    overflow: hidden;
+}
+
+.btn-round-lg {
+    border-radius: 22.5px;
+}
+
+.btn-round {
+    border-radius: 17px;
+}
+
+p li {
+    font-family: 'Raleway', sans-serif;
+    font-size: 1.1em;
+    font-weight: 300;
+    line-height: 1.7em;
+    color: #999;
+}
+
+h3 {
+    font-family: 'Lato', sans-serif;
+}
+
+[link] {
+    cursor:pointer;
+}
+
+[en-view="inactive"] {
+    display:none;
+}
+[en-view="active"] {
+    display:block;
+}
+
+.en-fullheight{
+    min-height:100vh;
+}
+
+
+input:focus,
+select:focus,
+textarea:focus,
+button:focus {
+    outline-width: 0;
+}
+
+.btn-small {
+    height:40px !important;
+    padding-top: .10rem !important;
+    padding-bottom: .16rem !important;
+}
+
+.nopadding {
+   padding: 0 !important;
+   margin: 0 !important;
+}
+
+.nomargin {
+    margin: 0  
+}
+
+.en-list {
+    overflow-y: auto;
+    padding: 25px;
+}
+
+.en-list-item{
+    cursor: pointer;
+}
+
+.en-page {
+    overflow-x:hidden;
+    padding:15px;
+    height:100vh;
+}
+.en-fullpage{
+  padding:0px;    
+}
+
+.en-2x {
+    font-size: 2.0em;
+}
+
+.en-white {
+    color:#ffffff
+}
+
+.en-blue {
+    color:#3498db;
+}
+
+.en-grey {
+    color:grey;
+}
+
+.en-silver {
+    color:Silver;
+}
+
+.en-bg-lightgrey {
+    background-color:#F8F8F8;
+}
+
+.en-bg-white {
+    background-color:#FFF;
+}
+
+.en-left {
+    float:left;
+}
+
+.en-right {
+    float:right;
+}
+
+.en-marker{
+    color:inherit;
+}
+.en-footer {
+    position: absolute;
+    bottom: 0;
+    width: 100vw;
+    display: grid;
+    grid-template-columns: auto auto auto auto auto;
+    height: 65px;
+    background-color: #FFFFFF;
+    margin:0;
+  }
+
+.en-badge {
+    position: relative;
+    top: -15px;
+    right: 5px;
+    min-width:30px;
+    height:30px;
+    background-color: #FF0000 !important;
+    border-radius:30px;
+    font-size:0.6em;
+    text-align:center;
+}
+
+.en-form-list{
+    border:0 !important;
+    height:5px !important;
+}
+
+.en-done {
+    position:absolute;
+    left:48%;
+    top:48%;
+    padding:4px;
+    width:50px;
+    height:50px;
+    z-index:10000;
+    background:#2b2b2b;
+    color:#fff;
+    opacity:0.9;
+    border-radius:5px;
+    -webkit-border-radius:5px;
+    -moz-border-radius:5px;
+}
+
+.en-busy {
+    position:absolute;
+    left:49%;
+    top:49%;
+    padding:4px;
+    width:50px;
+    height:50px;
+    z-index:10000;
+    color:#fff;
+    opacity:0.9;
+}
+
+.en-marker{
+    display:inline;
+}
+
+#uploadModal {
+    min-width: 600px;
+}
+.upload-file .start {
+    display: none;
+}
+.modal-footer, .modal-header {
+    padding: 10px;
+}
+.modal-header .close {
+    margin-top: 3px;
+}
+ol.upload-files-list {
+    margin: 0;
+    padding: 0 10px 10px 10px;
+    border-left: none;
+    border-right: none;
+    overflow: hidden;
+}
+ol.upload-files-list .upload-file:last-child {
+    border-bottom: 1px solid #ddd;
+}
+ol.upload-files-list .upload-file.template-download .error-col {
+    float: right;
+``}
+ol.upload-files-list .upload-file.template-upload .error-col {
+    float: left;
+}
+ol.upload-files-list .upload-file.template-upload .filesize-col{
+    float: left;
+    padding-right: 5px;
+    padding-left: 5px;
+    width: 80px;
+}
+ol.upload-files-list .upload-file {
+    list-style: none;
+    position: relative;
+    margin: 0;
+    height: 35px;
+    line-height: 35px;
+    border-top: 1px solid #ddd;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    vertical-align: bottom;
+}
+ol.upload-files-list .upload-file .upload-file-info {
+    vertical-align: baseline;
+    border-collapse: collapse;
+    /*width: 100%;*/
+    height: 35px;
+    position: absolute;
+    top: 0;
+    left: 10px;
+    right: 10px;
+}
+ol.upload-files-list .upload-file .upload-progress-bar {
+    height: 33px;
+    padding: 0;
+    margin: 0;
+}
+.upload-file.complete .upload-progress-bar {
+    background-color: #ebffd9;
+}
+.upload-file.error .upload-progress-bar {
+    background-color: #FD9F9F;
+}
+.upload-file .upload-progress-bar {
+    border-radius: 0;
+    background-color: #e9f4ff;
+}
+.upload-files-list .upload-file .upload-file-info .filename-col {
+    float: left;
+    width: 310px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.upload-files-list .upload-file .upload-file-info div {
+    display: block;
+}
+.upload-files-list .upload-file .upload-file-info .status-col {
+    float: right;
+    
+}
+.upload-files-list .upload-file .upload-file-info .actions-col {
+    float: right;
+}
+.field-validation-error {
+    color: red;
+}
+.fileupload-buttonbar {
+    padding: 10px;
+}
+#openUpload {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-left: -75px;
+    width: 150px;
+    margin-top: -25px;
+    height: 50px;
+}
+.modal-content {
+    -webkit-box-shadow: none;
+    box-shadow: none;
+}
+.modal-content, .btn {
+    border-radius:0;
+}
+.modal-backdrop {
+    background-color: #fff;
+}
+.modal-vertical-centered {
+    transform: translate(0, 50%) !important;
+    -ms-transform: translate(0, 50%) !important;
+    -webkit-transform: translate(0, 50%) !important;
+}
+#upload {
+    font-family:'PT Sans Narrow', sans-serif;
+}
+#drop {
+    padding: 10px 10px 0px 10px;
+    text-align: center;
+    text-transform: uppercase;
+    font-size: 16px;
+    font-weight: bold;
+    color: #7f858a;
+}
+#drop a {
+    background-color: #007a96;
+    padding: 12px 26px;
+    color: #fff;
+    font-size: 14px;
+    border-radius: 2px;
+    cursor: pointer;
+    display: block;
+    line-height: 1;
+}
+#drop a:hover {
+    background-color: #0986a3;
+}
+#drop input {
+    display:none;
+}
+
+.dropdown.dropdown-toggle::after {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin-left: .255em;
+    vertical-align: .255em;
+    content: "";
+    border-top: .3em solid;
+    border-right: .3em solid transparent;
+    border-bottom: 0;
+    border-left: .3em solid transparent;
+}
+
+.en-inline{
+    display:inline-block;
+    margin-left:-10px;
+    margin-top:-8px;
+}
+
+.en-logo {
+    vertical-align: middle;
+    width: 50px;
+    height: 50px;
+}
+
+.cursor {
+    cursor:pointer;
+}
+
