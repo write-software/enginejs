@@ -22,7 +22,7 @@ var homeModel = new model ({
     title:'',
     subtitle:'',
     lastlogin:'Last Login 18/05/2018',
-    name:'Engine App',
+    name:'Engine JS App',
     logo:'./assets/images/user.png',
     tagline:'Simple and powerful',
     profile:{
