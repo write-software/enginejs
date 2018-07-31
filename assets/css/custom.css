@@ -5,3 +5,13 @@
 .custom-title {
     margin-top:-15px;padding:10px 20px;    
 }
+
+.dvproducts{
+    height:calc(100vh - 40px);
+    overflow:auto;
+}
+
+
+.card .body {
+    padding:10px;
+}
