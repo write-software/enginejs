@@ -7,4 +7,4 @@ So I wanted a simple framework that had a small footprint, could be installed fr
 
 ## Still Under Development
 
-Currently look for collaborators. if you are interest please email steve@writsoftware.co.uk
+Currently looking for collaborators. if you are interested please email steve@writsoftware.co.uk
