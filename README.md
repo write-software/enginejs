@@ -6,3 +6,5 @@ I know what you are thinking... not another framework. Well there is a valid rea
 So I wanted a simple framework that had a small footprint, could be installed from a simple zip file and was ready to go start off.
 
 ## Still Under Development
+
+Currently look for collaborators. if you are interest please email steve@writsoftware.co.uk
