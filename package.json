@@ -3,7 +3,7 @@
     "version":"1.0.0",
     "build":"20180716.1",
     "paths":{
-        "lib":"./lib/",
+        "lib":"./engine/",
         "assets":"./assets/",
         "app":"./app/"
     },
