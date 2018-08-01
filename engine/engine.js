@@ -1388,7 +1388,7 @@ component = baseClass.extend({
             (sender, data) =>
             {
                 let el = data.event.target;
-                let sProp = $(el).attr("wa-bind");
+                let sProp = $(el).attr("en-bind");
                 _self._model.set(sProp, data.value);
                 if (_self.onchange) 
                     _self.onchange.call(_self,sProp, data);
