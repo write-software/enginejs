@@ -63,7 +63,7 @@
             "charts":{
                 "name":"charts",
                 "files":[
-                    "./lib/vendors/morrisjs/morris.css"
+                    "{lib}vendors/morrisjs/morris.css"
                 ]
             },
             "treeview":{
@@ -76,7 +76,7 @@
             "dataTable":{
                 "name":"dataTable",
                 "base":[
-                    "./lib/vendors/jquery-datatable/skin/bootstrap/css/dataTables.bootstrap.css",    
+                    "{lib}vendors/jquery-datatable/skin/bootstrap/css/dataTables.bootstrap.css",    
                     "{lib}vendors/jquery-datatable/jquery.dataTables"
                 ],
                 "files":[
