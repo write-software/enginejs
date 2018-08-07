@@ -9,4 +9,6 @@ To understand EngineJS please vist the [Wiki](https://github.com/write-software/
 
 ## Still Under Development
 
+I am currently applying the framework to several new projects so I can test out its capabilies.
+
 Currently looking for collaborators. if you are interested please email steve@writsoftware.co.uk
