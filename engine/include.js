@@ -1,3 +1,13 @@
+////////////////////////////////////////////////////////////////////////////
+/*
+    include.js
+
+    Main loading code for EngineJS, this loader ensures all the dependencies are loaded
+    in the correct order based on the package file.
+
+   
+*/
+////////////////////////////////////////////////////////////////////////////
 include.config = {
     verbose:true,
     strict:false,
