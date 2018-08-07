@@ -5,6 +5,10 @@ I know what you are thinking... not another framework. Well there is a valid rea
 
 So I wanted a simple framework that had a small footprint, could be installed from a simple zip file and was ready to go start off.
 
+To understand EngineJS please vist the WiKi
+
+[Wiki](https://github.com/write-software/enginejs/wiki)<br>
+
 ## Still Under Development
 
 Currently looking for collaborators. if you are interested please email steve@writsoftware.co.uk
