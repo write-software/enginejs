@@ -1,5 +1,5 @@
 // Load framework
-loadJSON("package.json",function(package)
+loadJSON("app/package.json",function(package)
 {
     loader(package.source,package.paths)
 })

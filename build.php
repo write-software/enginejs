@@ -68,7 +68,7 @@ function recurse_package($entries)
         }
         else if (is_object ($entry) && substr($key,0,1) != "!")
         {
-            trace($key);
+            trace("[$key] $entry");
             recurse_package($entry);
         }
     }    

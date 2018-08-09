@@ -30,6 +30,20 @@ include.config = {
 
 function loadJSON(fnJSON,callback) {   
 
+    var ifrm = document.createElement("iframe");
+    ifrm.setAttribute("src", fnJSON);
+    ifrm.style.width = "1px";
+    ifrm.style.height = "1px";
+    ifrm.onload = function()
+    {
+        var data = JSON.parse(ifrm.contentWindow.document.body.innerText);
+        callback(data);
+    }
+    document.body.appendChild(ifrm);
+ }
+
+ function loadJSON_OLD(fnJSON,callback) {   
+
     var xobj = new XMLHttpRequest();
         xobj.overrideMimeType("application/json");
     xobj.open('GET', fnJSON, true); // Replace 'my_data' with the path to your file
@@ -42,7 +56,6 @@ function loadJSON(fnJSON,callback) {
     };
     xobj.send(null);  
  }
-
 
 ////////////////////////////////////////////////////////////////////////////
 /*

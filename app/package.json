@@ -24,7 +24,9 @@
             "{lib}vendors/pouch/pouchdb",
             "{lib}vendors/momentjs/moment",
             "{lib}vendors/jslinq/JSLINQ",
-            "{lib}vendors/jquery/jquery.min"
+            "{lib}vendors/jquery/jquery.min",
+            "{lib}reach",
+            "{lib}ion.sound.min"
         ],
         "framework":[
             "{lib}engine"        
@@ -48,10 +50,15 @@
                 "files":[
                     "{lib}vendors/bootbox/bootbox.min",
                     "{lib}vendors/jquery-slimscroll/jquery.slimscroll",
-                    "{lib}vendors/node-waves/waves.css",
-                    "{lib}vendors/node-waves/waves",
                     "{lib}vendors/jquery-countto/jquery.countTo",            
                     "{lib}vendors/jquery-validation/jquery.validate.js"
+                ]
+            },
+            "material":{
+                "name":"material",
+                "files":[
+                    "{lib}vendors/node-waves/waves.css",
+                    "{lib}vendors/node-waves/waves"
                 ]
             },
             "maps":{
