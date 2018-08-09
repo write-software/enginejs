@@ -1,2 +1,5 @@
 design/
-destribution/
+distribution/
+.vscode/
+.gitignore
+distribution/app/app.js
