@@ -3,9 +3,17 @@
     include.js
 
     Main loading code for EngineJS, this loader ensures all the dependencies are loaded
-    in the correct order based on the package file.
+    in the correct order based on the package file (package.json).
 
    
+    Config
+        verbose : Report in the console window the name of each script loaded
+        strict  : Controls how INCLUDE handles load errors (404 not found), 
+                  with strict set to true the loading process will stop other it will
+                  just report the error.
+        devmode : Adds a querystring with a unique number to force a fresh of the file.
+        paths   : A group of keys for source paths internal use only
+        indent  : A string that indents the verbose output depending on the JSON struture. Internal user only
 */
 ////////////////////////////////////////////////////////////////////////////
 include.config = {
@@ -20,7 +28,7 @@ include.config = {
 /*
     loadJSON
 
-    Retreives the package JSON file from ther server.
+    Retreives the package JSON file from the server.
 
     Parameters 
         fnJSON : The name of the package to load.
@@ -32,29 +40,15 @@ function loadJSON(fnJSON,callback) {
 
     var ifrm = document.createElement("iframe");
     ifrm.setAttribute("src", fnJSON);
-    ifrm.style.width = "1px";
-    ifrm.style.height = "1px";
+    ifrm.style.width = "0px";
+    ifrm.style.height = "0px";
     ifrm.onload = function()
     {
         var data = JSON.parse(ifrm.contentWindow.document.body.innerText);
         callback(data);
+        document.body.removeChild(ifrm);
     }
     document.body.appendChild(ifrm);
- }
-
- function loadJSON_OLD(fnJSON,callback) {   
-
-    var xobj = new XMLHttpRequest();
-        xobj.overrideMimeType("application/json");
-    xobj.open('GET', fnJSON, true); // Replace 'my_data' with the path to your file
-    xobj.onreadystatechange = function () {
-          if (xobj.readyState == 4 && xobj.status == "200") {
-            // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
-            var data = JSON.parse(xobj.responseText);
-            callback(data);
-          }
-    };
-    xobj.send(null);  
  }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -66,15 +60,6 @@ function loadJSON(fnJSON,callback) {
     Parameters 
         script : Array of strings for each script you want to load.
         callback : A function that will be called once all the scripts are loaded
-
-    Config
-        verbose : Report in the console window the name of each script loaded
-        strict  : Controls how INCLUDE handles load errors (404 not found), 
-                  with strict set to true the loading process will stop other it will
-                  just report the error.
-        devmode : Adds a querystring with a unique number to force a fresh of the file.
-        paths   : A group of keys for source paths internal use only
-        indent  : A string that indents the verbose output depending on the JSON struture. Internal user only
 */
 ////////////////////////////////////////////////////////////////////////////
 

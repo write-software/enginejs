@@ -1,8 +1,28 @@
+////////////////////////////////////////////////////////////////////////////
+/*
+    engine.js
+
+    Code for EngineJS, this class based framework is based on MVC a architecture.
+
+   
+*/
+////////////////////////////////////////////////////////////////////////////
+
 //------------------------------------------------------------------------------
-// vars
+// Private gloval vars
 
 let _ready;
 window._appName = "EngineJS";
+
+////////////////////////////////////////////////////////////////////////////
+/*
+    _core
+
+    This global object is not accessed directly but helps EngineJS keep a track
+    of all create objects.
+    
+*/
+////////////////////////////////////////////////////////////////////////////
 window._core = {
     app:null,
     routers:{},
@@ -91,6 +111,17 @@ window._core = {
     }
 };
 
+////////////////////////////////////////////////////////////////////////////
+/*
+    loadScript
+
+    Global function to dynamically load script
+    
+    Parameters 
+        url : The name of script file to load.
+        callback : A function that will be called once the script is loaded
+*/
+////////////////////////////////////////////////////////////////////////////
 function loadScript(url, callback)
 {
     // Adding the script tag to the head as suggested before
@@ -107,6 +138,17 @@ function loadScript(url, callback)
     // Fire the loading
     head.appendChild(script);
 }
+////////////////////////////////////////////////////////////////////////////
+/*
+    loadModule
+
+    Global function to dynamically load script as a module
+    
+    Parameters 
+        url : The name of script file to load.
+        callback : A function that will be called once the script is loaded
+*/
+////////////////////////////////////////////////////////////////////////////
 function loadModule(url, callback)
 {
     // Adding the script tag to the head as suggested before
@@ -129,6 +171,17 @@ function loadModule(url, callback)
     head.appendChild(script);
 }
 
+////////////////////////////////////////////////////////////////////////////
+/*
+    _import
+
+    Global function to dynamically load script files
+    
+    Parameters 
+        scripts : An array of script files to be loaded.
+        callback : A function that will be called once all the script files are loaded
+*/
+////////////////////////////////////////////////////////////////////////////
 function _import(scripts,callback) {
     let loaded = 0;
     for(script in scripts)
@@ -147,7 +200,13 @@ function _import(scripts,callback) {
     }
 }
 ///////////////////////////////////////////////////////////////////////////////
-//  Class object
+/*
+    Class object
+
+    Global EngineJS class factory.
+    
+*/
+////////////////////////////////////////////////////////////////////////////
 (function()
 {
     var initializing = false;
@@ -242,6 +301,7 @@ if (!String.prototype.trim)
   };
 }
 
+//------------------------------------------------------------------------------
 // Macros
 
 $debug = function(x) { try { if (console) console.log(x);}catch(e){} };
@@ -252,8 +312,15 @@ $int = function(num) { return Math.round(num*Math.pow(10,0))/Math.pow(10,0); };
 $ucwords = function (s) { return s.replace(/\b[a-z](?=[a-z])/g, function(txt){return txt.charAt(0).toUpperCase();}); };
 $ellipsis = function (text,l)  {  text += "...";  while (text.length > chars && text.substr(text.length-3,1) != " ") { text = text.substr(0,text.length-4) + "..."; } return  text; };
 
-//------------------------------------------------------------------------------
+///////////////////////////////////////////////////////////////////////////////
+/*
+    Event Class
 
+    A private class used by EngineJS to fire events between the model, view and
+    controller.
+    
+*/
+////////////////////////////////////////////////////////////////////////////
 var _event = Class.extend({
     init:function(config)
     {
@@ -272,7 +339,20 @@ var _event = Class.extend({
     }
 });
 
-//------------------------------------------------------------------------------
+///////////////////////////////////////////////////////////////////////////////
+/*
+    Application Event Class
+
+    A global class to allow developers to handle application specific events.
+    These are not DOM based events but events that happen as the app is used.
+    
+    Example
+    
+    The event of a user signing in, that you may wish to intercept depending on
+    the user profile.
+    
+*/
+////////////////////////////////////////////////////////////////////////////
 var appEvents = Class.extend({
     init:function()
     {
@@ -334,7 +414,16 @@ var appEvents = Class.extend({
     }
 });
 
-//------------------------------------------------------------------------------
+///////////////////////////////////////////////////////////////////////////////
+/*
+    Base Class
+
+    A private class from which the models, views and controllers are derived.
+    
+    This class contains a standards of functions useful to any class object.
+    
+*/
+////////////////////////////////////////////////////////////////////////////
 var baseClass = Class.extend({
     init:function()
     {
