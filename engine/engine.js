@@ -438,7 +438,7 @@ var appEvents = Class.extend({
 
     A private class from which the models, views and controllers are derived.
     
-    This class contains a standards of functions useful to any class object.
+    This class contains a standard set of functions useful to any class object.
     
 */
 ////////////////////////////////////////////////////////////////////////////
@@ -645,7 +645,254 @@ var baseClass = Class.extend({
     }
 });
 
-//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////
+/*
+    MODEL class
+
+    Main model class and responsible for manipulaing the data. This class is
+    normally used as part of a MVC component but can be used independently.
+    
+    Parameters 
+        data :    Main data as a JSON object.
+        options : A JSON object set of model control options
+        
+        options = {
+            autoStore: false,   // When true the data in this model is automatically stored to the localstore.
+                                // likewise if data already exists the model will be initialised with it. 
+            methods: {          // this optional property add custom methods to tbe model instance
+            }
+        }
+*/
+////////////////////////////////////////////////////////////////////////////
+var model = baseClass.extend({
+    init:function(data,options = {})
+    {
+        this._super();
+        var _self = this;
+        this.name = options.name || this.guid();
+        this._data = data;
+        this.state = options.state || 0;  
+        this.autoStore = options.autoStore || false;     
+        if (typeof this._data == "function") 
+        {
+            try
+            {
+                this._data = this._data.call(this);
+            }
+            catch(e)
+            {
+                this.log("WARNING: data method call failed " + e.message);  
+            }
+        }
+        this.onChange = new _event( {sender:this} );
+        this.onSync = new _event( {sender:this} );
+        if (typeof options.methods == "object")
+        {
+            for (var key in options.methods) 
+            {
+                var reserved = ["_attachController","getState","changeState","set","get","asString"];
+                if (reserved.indexOf(key) == -1)
+                    this[key] = options.methods[key];
+                else
+                    this.log("WARNING: method matched reserved name");
+            };
+        }
+        if ( _core ) 
+        {
+            _core.attachModel(this.name,this);
+        } 
+        if (this.autoStore)
+        {
+            var d = this.getLocal(this.name,this._data)
+            if (d)
+                this._data = d;
+            else
+                this.storeLocal(this.name,this._data)
+        }
+        if (this.oninit) this.oninit.call(this);
+    },
+    _attachController:function(controller,property)
+    {
+        this._controller = controller;
+    },
+    getState:function()
+    {
+        return this.state;
+    },
+    changeState:function(value)
+    {
+        this.state = value;
+    },
+    getData:function()
+    {
+        return this._data;
+    },
+    get:function(prop)
+    {
+        if (prop.substr(0, 2) != "$.") prop = "$." + prop;
+        var result = jsonPath(this._data, prop);
+        if (result.length == 1)
+            return result[0];
+        return result;
+    },
+    sync:function()
+    {
+        if (this.onbeforesync) this.onbeforesync.call(this);
+        this.onSync.notify(this,this._data);   
+    },
+    set:function(prop, value, updateBinds = true)
+    {
+        let obj = this._data;
+        let propname = prop;
+        let p = prop.indexOf(".");
+        while (p != -1)
+        {
+            let element = prop.substr(0, p);
+            obj = obj[element];
+            prop = prop.substr(p + 1);
+            p = prop.indexOf(".");
+        }
+        var oldvalue = obj[prop];
+        obj[prop] = value;
+        if (updateBinds) this.onChange.notify( { data:this._data,prop:propname,value:value});
+        if (this.autoStore)
+            this.storeLocal(this.name,obj)
+    },
+    applyJSON:function(json,_exclude = "")
+    {
+        if (typeof json != "object") return;
+        for (var key in json) 
+        {
+            if (_exclude )
+            {
+                if (_exclude.indexOfWord(key) == -1)
+                    this._data[key] = json[key];
+            }
+            else
+                this._data[key] = json[key];
+        }        
+    },
+    push:function(prop, value)
+    {
+        let obj = this._data;
+        let p = prop.indexOf(".");
+        while (p != -1)
+        {
+            let element = prop.substr(0, p);
+            obj = obj[element];
+            prop = prop.substr(p + 1);
+            p = prop.indexOf(".");
+        }
+        if (!$.isArray(obj[prop])) return;
+        obj[prop].push(value);
+        this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
+        if (this.autoStore)
+            this.storeLocal(this.name,this._data)
+    },
+    pop:function(prop)
+    {
+        let obj = this._data;
+        let p = prop.indexOf(".");
+        while (p != -1)
+        {
+            let element = prop.substr(0, p);
+            obj = obj[element];
+            prop = prop.substr(p + 1);
+            p = prop.indexOf(".");
+        }
+        if (!$.isArray(obj[prop])) return;
+        var value = obj[prop].pop();
+        this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
+        if (this.autoStore)
+            this.storeLocal(this.name,this._data)
+        return value;
+    },
+    getAt:function(prop,index)
+    {
+        let obj = this._data;
+        let p = prop.indexOf(".");
+        while (p != -1)
+        {
+            let element = prop.substr(0, p);
+            obj = obj[element];
+            prop = prop.substr(p + 1);
+            p = prop.indexOf(".");
+        }
+        if (!$.isArray(obj[prop])) return null;
+        return obj[prop][index];
+    },
+    removeAt:function(prop,index)
+    {
+        let obj = this._data;
+        let p = prop.indexOf(".");
+        while (p != -1)
+        {
+            let element = prop.substr(0, p);
+            obj = obj[element];
+            prop = prop.substr(p + 1);
+            p = prop.indexOf(".");
+        }
+        if (!$.isArray(obj[prop])) return;
+        var value = obj[prop].splice(index,1);
+        this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
+        if (this.autoStore)
+            this.storeLocal(this.name,this._data)
+        return value;
+    },
+    insertAt:function(prop,index,value)
+    {
+        let obj = this._data;
+        let p = prop.indexOf(".");
+        while (p != -1)
+        {
+            let element = prop.substr(0, p);
+            obj = obj[element];
+            prop = prop.substr(p + 1);
+            p = prop.indexOf(".");
+        }
+        if (!$.isArray(obj[prop])) return;
+        obj[prop].splice(index,0,value);
+        this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
+        if (this.autoStore)
+            this.storeLocal(this.name,this._data)
+    },
+    asString:function()
+    {
+        return JSON.stringify (this._data);
+    },
+    search:function(_prop,_key,_value)
+    {
+        var d = this._data[_prop];
+        if (d)
+        {
+            for (var i = 0;i < d.length;i++)
+            {
+                var e = d[i][_key];
+                if (e && e == _value) return i;
+            }
+        }
+        return -1;    
+    }
+});
+
+////////////////////////////////////////////////////////////////////////////
+/*
+    VIEW class
+
+    Main view class and responsible for visiual interaction. This class can be
+    used either as hardcode HTML or HTML that is dynamically loaded.
+    
+    Parameters 
+        html : Pure HTML to be rendered as the view.
+        options : A JSON object set of view control options
+        
+        options = {
+            url:""          // the url to view dynamic loaded HTML 
+            methods: {      // this optional property add custom methods to tbe view instance
+            }
+        }
+*/
+////////////////////////////////////////////////////////////////////////////
 var view = baseClass.extend({
     init:function(html = "", options = {})
     {
@@ -1232,219 +1479,26 @@ var view = baseClass.extend({
     }
 });
 
-//------------------------------------------------------------------------------
-var model = baseClass.extend({
-    init:function(data,options = {})
-    {
-        this._super();
-        var _self = this;
-        this.name = options.name || this.guid();
-        this._data = data;
-        this.state = options.state || 0;  
-        this.autoStore = options.autoStore || false;     
-        if (typeof this._data == "function") 
-        {
-            try
-            {
-                this._data = this._data.call(this);
-            }
-            catch(e)
-            {
-                this.log("WARNING: data method call failed " + e.message);  
-            }
-        }
-        this.onChange = new _event( {sender:this} );
-        this.onSync = new _event( {sender:this} );
-        if (typeof options.methods == "object")
-        {
-            for (var key in options.methods) 
-            {
-                var reserved = ["_attachController","getState","changeState","set","get","asString"];
-                if (reserved.indexOf(key) == -1)
-                    this[key] = options.methods[key];
-                else
-                    this.log("WARNING: method matched reserved name");
-            };
-        }
-        if ( _core ) 
-        {
-            _core.attachModel(this.name,this);
-        } 
-        if (this.autoStore)
-        {
-            var d = this.getLocal(this.name,this._data)
-            if (d)
-                this._data = d;
-            else
-                this.storeLocal(this.name,this._data)
-        }
-        if (this.oninit) this.oninit.call(this);
-    },
-    _attachController:function(controller,property)
-    {
-        this._controller = controller;
-    },
-    getState:function()
-    {
-        return this.state;
-    },
-    changeState:function(value)
-    {
-        this.state = value;
-    },
-    getData:function()
-    {
-        return this._data;
-    },
-    get:function(prop)
-    {
-        if (prop.substr(0, 2) != "$.") prop = "$." + prop;
-        var result = jsonPath(this._data, prop);
-        if (result.length == 1)
-            return result[0];
-        return result;
-    },
-    sync:function()
-    {
-        if (this.onbeforesync) this.onbeforesync.call(this);
-        this.onSync.notify(this,this._data);   
-    },
-    set:function(prop, value, updateBinds = true)
-    {
-        let obj = this._data;
-        let propname = prop;
-        let p = prop.indexOf(".");
-        while (p != -1)
-        {
-            let element = prop.substr(0, p);
-            obj = obj[element];
-            prop = prop.substr(p + 1);
-            p = prop.indexOf(".");
-        }
-        var oldvalue = obj[prop];
-        obj[prop] = value;
-        if (updateBinds) this.onChange.notify( { data:this._data,prop:propname,value:value});
-        if (this.autoStore)
-            this.storeLocal(this.name,obj)
-    },
-    applyJSON:function(json,_exclude = "")
-    {
-        if (typeof json != "object") return;
-        for (var key in json) 
-        {
-            if (_exclude )
-            {
-                if (_exclude.indexOfWord(key) == -1)
-                    this._data[key] = json[key];
-            }
-            else
-                this._data[key] = json[key];
-        }        
-    },
-    push:function(prop, value)
-    {
-        let obj = this._data;
-        let p = prop.indexOf(".");
-        while (p != -1)
-        {
-            let element = prop.substr(0, p);
-            obj = obj[element];
-            prop = prop.substr(p + 1);
-            p = prop.indexOf(".");
-        }
-        if (!$.isArray(obj[prop])) return;
-        obj[prop].push(value);
-        this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
-        if (this.autoStore)
-            this.storeLocal(this.name,this._data)
-    },
-    pop:function(prop)
-    {
-        let obj = this._data;
-        let p = prop.indexOf(".");
-        while (p != -1)
-        {
-            let element = prop.substr(0, p);
-            obj = obj[element];
-            prop = prop.substr(p + 1);
-            p = prop.indexOf(".");
-        }
-        if (!$.isArray(obj[prop])) return;
-        var value = obj[prop].pop();
-        this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
-        if (this.autoStore)
-            this.storeLocal(this.name,this._data)
-        return value;
-    },
-    getAt:function(prop,index)
-    {
-        let obj = this._data;
-        let p = prop.indexOf(".");
-        while (p != -1)
-        {
-            let element = prop.substr(0, p);
-            obj = obj[element];
-            prop = prop.substr(p + 1);
-            p = prop.indexOf(".");
-        }
-        if (!$.isArray(obj[prop])) return null;
-        return obj[prop][index];
-    },
-    removeAt:function(prop,index)
-    {
-        let obj = this._data;
-        let p = prop.indexOf(".");
-        while (p != -1)
-        {
-            let element = prop.substr(0, p);
-            obj = obj[element];
-            prop = prop.substr(p + 1);
-            p = prop.indexOf(".");
-        }
-        if (!$.isArray(obj[prop])) return;
-        var value = obj[prop].splice(index,1);
-        this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
-        if (this.autoStore)
-            this.storeLocal(this.name,this._data)
-        return value;
-    },
-    insertAt:function(prop,index,value)
-    {
-        let obj = this._data;
-        let p = prop.indexOf(".");
-        while (p != -1)
-        {
-            let element = prop.substr(0, p);
-            obj = obj[element];
-            prop = prop.substr(p + 1);
-            p = prop.indexOf(".");
-        }
-        if (!$.isArray(obj[prop])) return;
-        obj[prop].splice(index,0,value);
-        this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
-        if (this.autoStore)
-            this.storeLocal(this.name,this._data)
-    },
-    asString:function()
-    {
-        return JSON.stringify (this._data);
-    },
-    search:function(_prop,_key,_value)
-    {
-        var d = this._data[_prop];
-        if (d)
-        {
-            for (var i = 0;i < d.length;i++)
-            {
-                var e = d[i][_key];
-                if (e && e == _value) return i;
-            }
-        }
-        return -1;    
-    }
-});
+////////////////////////////////////////////////////////////////////////////
+/*
+    COMPONENT class
 
-//------------------------------------------------------------------------------
+    Main component or controller class and responsible for binding the view and model together.
+    
+    Parameters 
+        _model : Model to be used (MUST EXISTS)
+        _view  : VIEW to be used (MUST EXISTS)
+        options : A JSON object set of component control options
+        
+        options = {
+            id:""           // ID of component if not provided one is generated. 
+            methods: {      // this optional property add custom methods to tbe component instance
+                // Overrides
+                ondatachange
+            }
+        }
+*/
+////////////////////////////////////////////////////////////////////////////
 component = baseClass.extend({
     init:function(_model, _view, options = {})
     {
@@ -1513,6 +1567,7 @@ component = baseClass.extend({
                     this.log("WARNING: method matched reserved name");
             };
         }
+        // Attach the controller to tbe view and model
         this._view._attachController(this);
         this._model._attachController(this);
         if (typeof this.oninit == "function")
@@ -1580,10 +1635,24 @@ component = baseClass.extend({
             }    
         });    
     },
+    //--------------------------------------------------------------------------
+    // Overrides
     _onrender:function()
     {   
         // Internal onrender for inherited components 
     },
+    _ondatachange:function()
+    {   
+        // Internal ondatachange for inherited components 
+    },
+    onupdatebind:function(sBind,value)
+    {
+    },
+    ondatachange:function()
+    {
+    
+    },
+    //--------------------------------------------------------------------------
     update:function(data)
     {
         this._model.set(data);
@@ -1599,9 +1668,6 @@ component = baseClass.extend({
     refreshData:function()
     {
         this._view._binds(this._model._data);
-    },
-    onupdatebind:function(sBind,value)
-    {
     },
     fire:function(_method)
     {
@@ -1630,9 +1696,26 @@ component = baseClass.extend({
     }
 });
 
-//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////
+/*
+    ENGINE class
+
+    Main application engine class.
+    
+    Parameters 
+        _model : Model to be used (MUST EXISTS)
+        _view  : VIEW to be used (MUST EXISTS)
+        options : A JSON object set of component control options
+        
+        options = {
+            appName:""      // Application Name mainly for vanity. 
+            methods: {      // this optional property add custom methods to tbe application instance
+            }
+        }
+*/
+////////////////////////////////////////////////////////////////////////////
 var engine = baseClass.extend({
-    init:function(appName,definition) {
+    init:function(appName,options) {
         this._super();
         if (appName == null) 
         {
@@ -1644,23 +1727,26 @@ var engine = baseClass.extend({
             this.log("WARNING: Only one app object per application");
             return;
         }
+        // register with the core
         _core.app = this;
-        if (definition)
+        if (options)
         {
-            if (typeof definition.methods == "object")
+            if (typeof options.methods == "object")
             {
-                for (var key in definition.methods) 
+                for (var key in options.methods) 
                 {
                     var reserved = ["main","fire","attachComponent","attachConstants",
                                     "attachRouter","ready","render","getModel","getModelData","getComponent"];
                     if (reserved.indexOf(key) == -1)
-                        this[key] = definition.methods[key];
+                        this[key] = options.methods[key];
                     else
                         this.log("WARNING: method matched reserved name");
                 };
             }
         }
         this.events = new appEvents();
+        
+        // Initialise Handlebars
         Handlebars.__switch_stack__ = [];
 
         Handlebars.registerHelper( "switch", function( value, options ) {
@@ -2253,7 +2339,21 @@ var engine = baseClass.extend({
     }
 })
 
-//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////
+/*
+    HTTP class
+
+    Ajax connect class.
+    
+    Parameters 
+        url : Base URL for all connections
+        model  : Used for Lazy link remote data to model
+        property : property in model to update with resultant data
+        
+        This model & property assume the response is in JSON format and contains
+        the property "result".
+*/
+////////////////////////////////////////////////////////////////////////////
 var http = baseClass.extend({
     init:function(url,model,property) {
         this._super();
@@ -2348,7 +2448,15 @@ var http = baseClass.extend({
     }
 });
 
-//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////
+/*
+    DATAMAP class
+
+    A class is for mapping data properties between JSON Objects, works with Store class.
+    
+    This provides two-way movement of data.
+*/
+////////////////////////////////////////////////////////////////////////////
 var dataMap = baseClass.extend({
     init:function() 
     {
@@ -2421,31 +2529,45 @@ var dataMap = baseClass.extend({
     }
 })
 
-//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////
+/*
+    STORE class
+
+    A store is for general data storage and works with PouchDB and the DataMaps class.
+    
+    Parameters 
+        options : {
+            type:'simple',  // Works like a model but much simpler
+            data: [],       // Used with simple type
+            methods:{
+            }
+        }
+*/
+////////////////////////////////////////////////////////////////////////////
 var store = baseClass.extend({
-    init:function(definition) 
+    init:function(options) 
     {
         this._super();
         this.db = null;
         this.data = [];
         this.dataMaps = [];
-        if (definition)
+        if (options)
         {
-            this.type = definition.type || "simple";
+            this.type = options.type || "simple";
             if (this.type == "simple")
             {
-                if (definition.data instanceof Array)
+                if (options.data instanceof Array)
                 {
-                    this.data = definition.data;   
+                    this.data = options.data;   
                 }
             }
-            if (typeof definition.methods == "object")
+            if (typeof options.methods == "object")
             {
-                for (var key in definition.methods) 
+                for (var key in options.methods) 
                 {
                     var reserved = ["openDB","put","get"];
                     if (reserved.indexOf(key) == -1)
-                        this[key] = definition.methods[key];
+                        this[key] = options.methods[key];
                     else
                         this.log("WARNING: method matched reserved name");
                 };
@@ -2659,15 +2781,19 @@ var store = baseClass.extend({
         // handle errors
     }
 })
-//------------------------------------------------------------------------------
-var service = baseClass.extend({
-    init:function() 
-    {
-        this._super();
-    }
-})
 
-//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////
+/*
+    ROUTER class
+
+    A routing class for navigation between views.
+    
+    Parameters 
+        name : // Name of router
+        
+    Routing works off the browser HASH # navigation
+*/
+////////////////////////////////////////////////////////////////////////////
 var router = Class.extend({
     init:function(name) {
         if (name == null) return;
@@ -2801,4 +2927,5 @@ var router = Class.extend({
     }
 })
 
+// Internal engine object/
 var $en = new engine();
