@@ -66,13 +66,9 @@ var dashboardPage = new component(
             },
             showStats:function()
             {
-                var random = function random(min,max)
-                {
-                    return Math.floor(Math.random()*(max-min+1)+min);
-                }
-                dashboardModel.set("searches",random(1,100));
-                dashboardModel.set("reviews",random(1,100));
-                dashboardModel.set("comments",random(1,100));
+                dashboardModel.set("searches",$random(1,100));
+                dashboardModel.set("reviews",$random(1,100));
+                dashboardModel.set("comments",$random(1,100));
                 $delay(10000,dashboardPage.showStats);                        
             },
             onrender:function()

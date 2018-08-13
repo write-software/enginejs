@@ -22,6 +22,7 @@
 
     Code for EngineJS, this class based framework is based on MVC a architecture.
 
+    version:    1.0.0
    
 */
 ////////////////////////////////////////////////////////////////////////////
@@ -327,6 +328,7 @@ $delay = function(t,f,s) { return setTimeout(function(){ f(s); },t); };
 $ft = function(v) { if (v == "") return 0; if (v == null) return 0; return parseFloat(v); };
 $round = function(num,dec) { return Math.round(num*Math.pow(10,dec))/Math.pow(10,dec); };
 $int = function(num) { return Math.round(num*Math.pow(10,0))/Math.pow(10,0); };
+$random = function(min,max) { return Math.floor(Math.random()*(max-min+1)+min); };
 $ucwords = function (s) { return s.replace(/\b[a-z](?=[a-z])/g, function(txt){return txt.charAt(0).toUpperCase();}); };
 $ellipsis = function (text,l)  {  text += "...";  while (text.length > chars && text.substr(text.length-3,1) != " ") { text = text.substr(0,text.length-4) + "..."; } return  text; };
 
