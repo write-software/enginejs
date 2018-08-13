@@ -64,30 +64,20 @@ var dashboardPage = new component(
             {
                 $('.' + prop).countTo({ from: 0, to: value, speed:1000 });
             },
-            monitorStats:function()
+            showStats:function()
             {
-                connector.get( { command:'stats',  token:portalModel.get("token"), organisation:portalModel.get("organisation") } )
-                    .then(function(resp)
-                    {
-                        if (resp.success)
-                        {
-                            if (resp.searches != dashboardModel.get("searches")) dashboardModel.set("searches",resp.searches);
-                            if (resp.reviews != dashboardModel.get("reviews")) dashboardModel.set("reviews",resp.reviews);
-                            if (resp.comments != dashboardModel.get("comments")) dashboardModel.set("comments",resp.comments);
-                            if (resp.visitors != dashboardModel.get("visitors")) dashboardModel.set("visitors",resp.visitors);
-                        }
-                        $delay(10000,dashboardPage.monitorStats);                        
-                    });
-                    connector.get( { command:'comments.get', token:portalModel.get("token"), organisation:portalModel.get("organisation") } )
-                        .then(function(resp)
-                        {
-                            if (resp.success)
-                            {
-                                dashboardModel.set('commentsList',JSON.parse(resp.comments),true);
-                            }
-                            else
-                                $debug(resp.errors[0].error);                               
-                        });
+                var random = function random(min,max)
+                {
+                    return Math.floor(Math.random()*(max-min+1)+min);
+                }
+                dashboardModel.set("searches",random(1,100));
+                dashboardModel.set("reviews",random(1,100));
+                dashboardModel.set("comments",random(1,100));
+                $delay(10000,dashboardPage.showStats);                        
+            },
+            onrender:function()
+            {
+                $delay(1000,dashboardPage.showStats);                
             }
         }
     });
