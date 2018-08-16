@@ -168,6 +168,24 @@ $.engine.leftSideBar = {
             $openCloseBar.fadeOut();
         }
     },
+    setSettingListHeightAndScroll: function (isFirstTime) {
+        var height = $(window).height() - ($('.navbar').innerHeight() + $('.right-sidebar .nav-tabs').outerHeight());
+        var $el = $('.right-sidebar .settings');
+    
+        if (!isFirstTime){
+          $el.slimScroll({ destroy: true }).height('auto');
+          $el.parent().find('.slimScrollBar, .slimScrollRail').remove();
+        }
+    
+        $el.slimscroll({
+            height: height + 'px',
+            color: 'rgba(0,0,0,0.5)',
+            size: '6px',
+            alwaysVisible: false,
+            borderRadius: '0',
+            railBorderRadius: '0'
+        });
+    },    
     isOpen: function () {
         return $('body').hasClass('overlay-open');
     }
@@ -200,6 +218,32 @@ $.engine.rightSideBar = {
             if (_this.isOpen()) { $overlay.fadeIn(); } else { $overlay.fadeOut(); }
         });
     },
+    rightSideBar:{
+        activate: function () {
+            var _this = this;
+            var $sidebar = $('#rightsidebar');
+            var $overlay = $('.overlay');
+    
+            //Close sidebar
+            $(window).click(function (e) {
+                var $target = $(e.target);
+                if (e.target.nodeName.toLowerCase() === 'i') { $target = $(e.target).parent(); }
+    
+                if (!$target.hasClass('js-right-sidebar') && _this.isOpen() && $target.parents('#rightsidebar').length === 0) {
+                    if (!$target.hasClass('bars')) $overlay.fadeOut();
+                    $sidebar.removeClass('open');
+                }
+            });
+    
+            $('.js-right-sidebar').on('click', function () {
+                $sidebar.toggleClass('open');
+                if (_this.isOpen()) { $overlay.fadeIn(); } else { $overlay.fadeOut(); }
+            });
+        },
+        isOpen: function () {
+            return $('.right-sidebar').hasClass('open');                         
+        }
+    },    
     isOpen: function () {
         return $('.right-sidebar').hasClass('open');
     }
