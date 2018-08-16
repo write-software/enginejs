@@ -760,7 +760,7 @@ var model = baseClass.extend({
         if (this.autoStore)
             this.storeLocal(this.name,obj)
     },
-    applyJSON:function(json,_exclude = "")
+    applyJSON:function(json,_exclude = "", updateBinds = true)
     {
         if (typeof json != "object") return;
         for (var key in json) 
@@ -773,6 +773,7 @@ var model = baseClass.extend({
             else
                 this._data[key] = json[key];
         }        
+        if (updateBinds && this._controller) this._controller.refreshData()     
     },
     push:function(prop, value)
     {
