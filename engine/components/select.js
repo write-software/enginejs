@@ -53,7 +53,10 @@ var select = component.extend({
                     }              
                 }
                 if (sSelected == "{value}")
+                {
                     sSelected = _self._model.get(_self.dataBind)[clickedIndex];
+                    sSelected = sSelected.value;
+                }
                 try{
                     _self.onselected(sSelected,clickedIndex, ev);
                 }
@@ -89,26 +92,31 @@ var select = component.extend({
         if (_value == null) return;
         var _self = this;
         var data = this._model.getData()[this.dataBind];
-        var index = 0;
-         _self.selected = [];
-        $.each(data,function(key,value)
+        if (_self.multiple)
         {
-            var v = data[key];
-            if (v.value == null) v.value = v.text;
-            if ((_value+",").indexOf(v.value+",") != -1)
+            var index = 0;
+             _self.selected = [];
+            $.each(data,function(key,value)
             {
-                if (_value == "" && v.value == "")
+                var v = data[key];
+                if (v.value == null) v.value = v.text;
+                if ((_value+",").indexOf(v.value+",") != -1)
                 {
-                    _self.selected.push(_value);
+                    if (_value == "" && v.value == "")
+                    {
+                        _self.selected.push(_value);
+                    }
+                    else if (v.value != "") 
+                    {
+                        _self.selected.push(v.value);
+                    }
                 }
-                else if (v.value != "") 
-                {
-                    _self.selected.push(v.value);
-                }
-            }
-            index++;
-        });
-        $(_self._view._element).find('select:not(.ms)').selectpicker('val',_self.selected);
+                index++;
+            });
+            $(_self._view._element).find('select:not(.ms)').selectpicker('val',_self.selected);
+        }
+        else
+            $(_self._view._element).find('select:not(.ms)').selectpicker('val',_value);
         $(_self._view._element).find('select:not(.ms)').selectpicker('refresh');
     }
 });    
