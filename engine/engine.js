@@ -2828,6 +2828,8 @@ var router = Class.extend({
                     console.log("sHash Target page not rendered");
                     return;
                 }
+                // Check we can navigate
+                if (!_self.canNavigate.call(_self,sHash)) return;
                 // Hide existing views
                 for (var v in _self.routes)
                 {
@@ -2835,14 +2837,22 @@ var router = Class.extend({
                     $(comp._view._element).attr("en-view","inactive");
                     comp.fire("onhide",sHash);
                 }
-                if (!_self.canNavigate.call(_self,sHash)) return;
+                // Show view
                 target.fire("beforeNavigate",sHash);
                 $(target._view._element).attr("en-view","active");
                 target.refreshData();
                 target.fire("afterNavigate",sHash);
-                $.engine.input.activate();
-                $.engine.dropdownMenu.activate();
-                $.engine.select.activate();
+                // Refresh and input components
+                try
+                {
+                    $.engine.input.activate();
+                    $.engine.dropdownMenu.activate();
+                    $.engine.select.activate();    
+                }
+                catch(e)
+                {
+
+                }
                 break; 
             }
         }
