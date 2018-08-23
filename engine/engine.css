@@ -41,6 +41,9 @@ h3 {
     min-height:100vh;
 }
 
+.en-yscroll {
+    overflow-y:auto;
+}
 
 input:focus,
 select:focus,

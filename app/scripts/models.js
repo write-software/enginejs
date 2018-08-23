@@ -53,6 +53,17 @@ var componentsModel = new model({
     name:'componentsModel'
 });
 
+var allEventsModel = new model({
+    events:[
+        { banner:"default_banner.img", title:"Event 1", description:"First Event", location:"At the pub", times:"20:00 - 23:00" },
+        { banner:"default_banner.img", title:"Event 2", description:"Second Event", location:"At the other pub", times:"20:00 - 23:00" }
+    ]
+},
+{
+    name:'allEventsModel'
+});
+
+
 var developmentModel = new model({
     entry: {
         name: 'Steve',
@@ -145,6 +156,8 @@ for the controller model.
         }
     }
 });
+
+//==============================================================================
 
 var mconnector = new http("./api/");
 

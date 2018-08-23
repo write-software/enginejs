@@ -119,6 +119,7 @@
             "name":"Main Code",
             "production":false,
             "components":[
+                "{lib}components/carousel",    
                 "{lib}components/dialog",    
                 "{lib}components/select",    
                 "{lib}components/dataview",    

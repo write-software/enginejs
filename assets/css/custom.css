@@ -7,11 +7,29 @@
 }
 
 .dvproducts{
-    height:calc(100vh - 40px);
+    height:50vh;
     overflow:auto;
 }
 
 
 .card .body {
     padding:10px;
+}
+
+.fixed-page {
+    height:calc(100vh - 120px);
+}
+
+.banner {
+    width:100%;
+}
+
+.carousel-control{
+    color:#000;
+}
+.carousel-control.right {
+    background-image: none;
+}
+.carousel-control.left {
+    background-image: none;
 }

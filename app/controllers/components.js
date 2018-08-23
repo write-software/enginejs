@@ -113,6 +113,59 @@ var dvproducts = new dataView({
         }
     }
  },dataModel);
+ 
+var dvallevents = new carousel({  
+    id:'dvallevents',
+    dataBind:'events',
+    methods:{
+        oninit:function()
+        {
+            this.template = `<div class="item {{cls}}"><div class="card" style="width: 390px;margin: 5px 10px 5px 0px;" en-index="{{index}}">
+                <div class="header padding-0 ">
+                    <img class="img-fluid banner"  src="./assets/images/{{banner}}"/><br>
+                </div>        
+                <div class="body p-t-0">
+                    <div class="row">
+                        <div class="col-md-12">       
+                            <div class="title">
+                                <center>{{ title }}</center>
+                            </div>        
+                            <div>
+                                {{ description }}
+                            </div>        
+                        </div>        
+                    </div>        
+                    <div class="row">
+                        <div class="col-md-12">       
+                            {{ location }}
+                            <div class="right times">
+                                Times: {{ times }}
+                            </div>        
+                        </div>        
+                    </div>        
+                </div>        
+            </div></div> `
+        },
+        emptyRender:function()
+        {
+            return `<center><h3>Events Comming Soon</h3></center>`;
+        },
+        dataRender:function(entry,index)
+        {
+            var output = this.template;
+            entry.index = index;
+            if (index == 0)
+                entry.cls = "active";
+            else
+                entry.cls = "";
+            output = this.compile(output,entry);
+            output = output.replaceAll("{{cls}}",entry.cls);   
+            output = output.replaceAll("{{id}}",this._id + "_" + index);   
+            return output;                      
+        }
+    }
+ },allEventsModel);
+ 
 
 var componentsPage = new component(
     componentsModel,
