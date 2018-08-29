@@ -24,6 +24,7 @@
                 This is fine with the data is unlikely to change or you want some logic.
             </div>
             <div class="col-md-6" en-click="onclick">
+                <h2>Result</h2>
                 {{title}}
                 <br> {{{entry.name}}} {{#if entry.active}} Active  {{/if}} {{#each list}}
                 <div>{{name}}</div>
@@ -34,7 +35,7 @@
         </div>
         <div class="row p-t-50 margin-0">
             <div class="col-md-6">
-                2. Web App notation. Using {&#37; express &#37;} or {&#61; express &#61;}
+                2. EngineJS notation. Using {&#37; express &#37;} or {&#61; express &#61;}
                 <br>
                 <pre>
                     {% notation %}
@@ -43,13 +44,13 @@
                 <br>
                 {&#37; creates a data bind element (<span>) that will be updated if the associated model data is changed<br>
                 <br>
-                {&#61; is a literal render of data but unlike "handlebars" it is a javascript evalation (eval function) of the expression.
+                {&#61; is a literal render of data but unlike "handlebars" which uses &#123;&#123;&#123; &#125;&#125;&#125;, it is a javascript evaluation (eval function) of the expression.
             </div>
             <div class="col-md-6">
-                developmentModel.qty * 2 = {% developmentModel.qty * 2 %}
-                <br> developmentModel.getQty() * 3 = {% developmentModel.getQty() * 3 %}
-                <br> developmentModel.qty = {= developmentModel.qty =}
-                <br>
+                    <h2>Result</h2>
+                    <br> developmentModel.qty = {= developmentModel.qty =}
+                <br> <br> developmentModel.qty * 2 = {% developmentModel.qty * 2 %}
+                <br> <br> developmentModel.getQty() * 3 = {% developmentModel.getQty() * 3 %}
             </div>
         </div>
         <div class="row p-t-50 margin-0">
@@ -62,8 +63,12 @@
                 The "en-model" is optional. If not provide EngineJS will use the controller model.
             </div>
             <div class="col-md-6">
+                <h2>Result</h2>
                 <div en-model="developmentModel" en-bind="title"></div>
+                <br>
                 <div en-bind="developmentModel.title"></div>
+                <br>
+                <div en-bind="title"></div>
             </div>
         </div>
     </div>

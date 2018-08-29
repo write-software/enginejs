@@ -115,9 +115,11 @@ var developmentModel = new model({
         see https://handlebarsjs.com for full documentation;
     `,
     notation:`
-developmentModel.qty * 2 = {% developmentModel.qty * 2 %}
-developmentModel.getQty() * 3 = {% developmentModel.getQty() * 3 %}
-developmentModel.qty = {= developmentModel.qty =}
+    developmentModel.qty = {= developmentModel.qty =}
+    
+    developmentModel.qty * 2 = {% developmentModel.qty * 2 %}
+    
+    developmentModel.getQty() * 3 = {% developmentModel.getQty() * 3 %}
     `,
     binding:html_entity_encode(`
 <div en-model="developmentModel" en-bind="title"></div>
