@@ -95,6 +95,7 @@ $.engine.leftSideBar = {
         });
 
         //Collapse or Expand Menu
+        $('.menu-toggle').unbind('click');
         $('.menu-toggle').on('click', function (e) {
             var $this = $(this);
             var $content = $this.next();
@@ -213,6 +214,7 @@ $.engine.rightSideBar = {
             }
         });
 
+        $('.js-right-sidebar').unbind('click');
         $('.js-right-sidebar').on('click', function () {
             $sidebar.toggleClass('open');
             if (_this.isOpen()) { $overlay.fadeIn(); } else { $overlay.fadeOut(); }
@@ -235,6 +237,7 @@ $.engine.rightSideBar = {
                 }
             });
     
+            $('.js-right-sidebar').unbind('click');
             $('.js-right-sidebar').on('click', function () {
                 $sidebar.toggleClass('open');
                 if (_this.isOpen()) { $overlay.fadeIn(); } else { $overlay.fadeOut(); }
@@ -260,16 +263,19 @@ $.engine.search = {
         var _this = this;
 
         //Search button click event
+        $('.js-search').unbind('click');
         $('.js-search').on('click', function () {
             _this.showSearchBar();
         });
 
         //Close search click event
+        $searchBar.find('.close-search').unbind('click');
         $searchBar.find('.close-search').on('click', function () {
             _this.hideSearchBar();
         });
 
         //ESC key on pressed
+        $searchBar.find('input[type="text"]').unbind('keyup');
         $searchBar.find('input[type="text"]').on('keyup', function (e) {
             if (e.keyCode == 27) {
                 _this.hideSearchBar();
@@ -297,12 +303,14 @@ $.engine.navbar = {
         var $overlay = $('.overlay');
 
         //Open left sidebar panel
+        $('.bars').unbind('click');
         $('.bars').on('click', function () {
             $body.toggleClass('overlay-open');
             if ($body.hasClass('overlay-open')) { $overlay.fadeIn(); } else { $overlay.fadeOut(); }
         });
 
         //Close collapse bar on click event
+        $('nav [data-close="true"]').unbind('click');
         $('.nav [data-close="true"]').on('click', function () {
             var isVisible = $('.navbar-toggle').is(':visible');
             var $navbarCollapse = $('.navbar-collapse');
@@ -324,11 +332,13 @@ $.engine.navbar = {
 $.engine.input = {
     activate: function () {
         //On focus event
+        $('.form-control').unbind('focus');
         $('.form-control').focus(function () {
             $(this).parent().addClass('focused');
         });
 
         //On focusout event
+        $('.form-control').unbind('focusout');
         $('.form-control').focusout(function () {
             var $this = $(this);
             if ($this.parents('.form-group').hasClass('form-float')) {
