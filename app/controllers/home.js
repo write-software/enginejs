@@ -1,4 +1,4 @@
-var homeView = $en.createView("",{ url:"./app/views/home.html" });
+var homeView = new view("",{ url:"./app/views/home.html" });
 
 var homePage = new component(
     homeModel,
@@ -8,11 +8,11 @@ var homePage = new component(
         methods:{
             onrender:function()
             {
-                $.engine.leftSideBar.setSettingListHeightAndScroll(true);
+                engine.leftSideBar.setSettingListHeightAndScroll(true);
                 $(window).resize(function () {
-                    $.engine.leftSideBar.setSettingListHeightAndScroll(false);
+                    engine.leftSideBar.setSettingListHeightAndScroll(false);
                 });
-                $.engine.rightSideBar.rightSideBar.activate();
+                engine.rightSideBar.rightSideBar.activate();
                 $('.nav-tabs a:first').tab('show');
             },
             goTo:function(page)

@@ -18,10 +18,10 @@ var dialog = component.extend({
               <!-- Modal content-->
               <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
                     <h4 class="modal-title">${options.title}</h4>
                     <br>
                     ${options.header}
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
                 </div>
                 <div class="modal-body">
                     ${options.body}

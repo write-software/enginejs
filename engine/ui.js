@@ -16,13 +16,11 @@
  * OF THIS SOFTWARE OR ITS FITNESS FOR ANY PARTICULAR PURPOSE.
  *
  ***************************************************************/
- 
- if (typeof jQuery === "undefined") {
-    throw new Error("jQuery plugins need to be before this file");
+if (typeof engine === "undefined") {
+    throw new Error("engine core needs to be before this file");
 }
 
-$.engine = {};
-$.engine.options = {
+engine.options = {
     colors: {
         red: '#F44336',
         pink: '#E91E63',
@@ -65,7 +63,7 @@ $.engine.options = {
 *  You can manage the left sidebar menu options
 *  
 */
-$.engine.leftSideBar = {
+engine.leftSideBar = {
     activate: function () {
         var _this = this;
         var $body = $('body');
@@ -129,7 +127,7 @@ $.engine.leftSideBar = {
     },
     setMenuHeight: function (isFirstTime) {
         if (typeof $.fn.slimScroll != 'undefined') {
-            var configs = $.engine.options.leftSideBar;
+            var configs = engine.options.leftSideBar;
             var height = ($(window).height() - ($('.legal').outerHeight() + $('.user-info').outerHeight() + $('.navbar').innerHeight()));
             var $el = $('.list');
 
@@ -143,7 +141,7 @@ $.engine.leftSideBar = {
             });
 
             //Scroll active menu item when page load, if option set = true
-            if ($.engine.options.leftSideBar.scrollActiveItemWhenPageLoad) {
+            if (engine.options.leftSideBar.scrollActiveItemWhenPageLoad) {
                 var activeItemOffsetTop = $('.menu .list li.active')[0].offsetTop;
                 if (activeItemOffsetTop > 150) $el.slimscroll({ scrollTo: activeItemOffsetTop + 'px' });
             }
@@ -160,7 +158,7 @@ $.engine.leftSideBar = {
             });
         }
 
-        if (width < $.engine.options.leftSideBar.breakpointWidth) {
+        if (width < engine.options.leftSideBar.breakpointWidth) {
             $body.addClass('ls-closed');
             $openCloseBar.fadeIn();
         }
@@ -197,7 +195,7 @@ $.engine.leftSideBar = {
 *  You can manage the right sidebar menu options
 *  
 */
-$.engine.rightSideBar = {
+engine.rightSideBar = {
     activate: function () {
         var _this = this;
         var $sidebar = $('#rightsidebar');
@@ -258,7 +256,7 @@ $.engine.rightSideBar = {
 *  
 */
 var $searchBar = $('.search-bar');
-$.engine.search = {
+engine.search = {
     activate: function () {
         var _this = this;
 
@@ -297,7 +295,7 @@ $.engine.search = {
 *  You can manage the navbar
 *  
 */
-$.engine.navbar = {
+engine.navbar = {
     activate: function () {
         var $body = $('body');
         var $overlay = $('.overlay');
@@ -329,7 +327,7 @@ $.engine.navbar = {
 *  You can manage the inputs(also textareas) with name of class 'form-control'
 *  
 */
-$.engine.input = {
+engine.input = {
     activate: function () {
         //On focus event
         $('.form-control').unbind('focus');
@@ -368,7 +366,7 @@ $.engine.input = {
 *  You can manage the 'select' of form elements
 *  
 */
-$.engine.select = {
+engine.select = {
     activate: function () {
         if ($.fn.selectpicker) { $('select:not(.ms)').selectpicker(); }
     }
@@ -380,7 +378,7 @@ $.engine.select = {
 *  
 */
 
-$.engine.dropdownMenu = {
+engine.dropdownMenu = {
     activate: function () {
         var _this = this;
 
@@ -412,7 +410,7 @@ $.engine.dropdownMenu = {
         Waves.init();
     },
     dropdownEffect: function (target) {
-        var effectIn = $.engine.options.dropdownMenu.effectIn, effectOut = $.engine.options.dropdownMenu.effectOut;
+        var effectIn = engine.options.dropdownMenu.effectIn, effectOut = engine.options.dropdownMenu.effectOut;
         var dropdown = $(target), dropdownMenu = $('.dropdown-menu', target);
 
         if (dropdown.length > 0) {
@@ -465,7 +463,7 @@ var firefox = 'Mozilla Firefox';
 var chrome = 'Google Chrome';
 var safari = 'Safari';
 
-$.engine.browser = {
+engine.browser = {
     activate: function () {
         var _this = this;
         var className = _this.getClassName();
@@ -518,11 +516,11 @@ $.engine.browser = {
 //==========================================================================================================================
 
 $(function () {
-    $.engine.browser.activate();
-    if ($.engine.leftSideBar)
-        $.engine.leftSideBar.activate();
-    if ($.engine.rightSideBar)
-        $.engine.rightSideBar.activate();
+    engine.browser.activate();
+    if (engine.leftSideBar)
+        engine.leftSideBar.activate();
+    if (engine.rightSideBar)
+        engine.rightSideBar.activate();
     setTimeout(function () { $('.page-loader-wrapper').fadeOut(); }, 50);
     try{
         //Textarea auto growth

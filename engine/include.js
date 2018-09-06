@@ -172,14 +172,20 @@ function include(scripts, callback)
 function loader(package,paths)
 {
     var scripts = [];
+    var sLoadText = "Loading";
 
+    if (package.exclude) sLoadText = "Excluding"
     if (include.config.verbose)
     {
         console.log(include.config.indent + "=============================================");
         if ( package.name )
-             console.log(include.config.indent + "loading script for " + package.name);
+            console.log(include.config.indent + sLoadText + " scripts for " + package.name);
         else
-            console.log(include.config.indent + "loading scripts");
+            console.log(include.config.indent + sLoadText + " scripts");
+    }
+    if (package.exclude)
+    {
+        return;
     }
     if (paths)
     {

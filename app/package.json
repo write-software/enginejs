@@ -36,7 +36,7 @@
             "bootstrap":{
                 "name":"Bootstrap",
                 "files":[
-                    "{lib}vendors/bootstrap/css/bootstrap.min.css",
+                    "{lib}vendors/bootstrap/css/bootstrap.min.css",                    
                     "{lib}vendors/bootstrap/js/bootstrap.min",    
                     "{lib}vendors/bootstrap-select/css/bootstrap-select.css",
                     "{lib}vendors/bootstrap-select/js/bootstrap-select",
@@ -132,6 +132,7 @@
             "scripts":{
                 "name":"scripts",
                 "base":[
+                    "{app}/scripts/constants",
                     "{app}/scripts/models"
                 ],
                 "files":[

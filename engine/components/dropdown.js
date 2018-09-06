@@ -20,11 +20,7 @@ var dropdown = component.extend({
             <button class="btn ${options.className} dropdown dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 ${options.text}
             </button>
-            <ul class="dropdown-menu">
-                <li class="body">
-                   <ul class="menu" en-bind="${options.dataBind}">
-                    </ul>
-                </li>
+            <ul class="dropdown-menu" en-bind="${options.dataBind}">
             </ul>
         </div>`;
         let _view = new view(html);

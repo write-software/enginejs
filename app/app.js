@@ -1,5 +1,5 @@
 
-var app = new engine("Engine JS Demo",{
+var app = new application("Engine JS Demo",{
     methods:{
        query: function(selector) {
            return this.query(selector);
