@@ -42,6 +42,7 @@ app.ready().then(function()
             homePage.routing.add("/dashboard",dashboardPage);
             homePage.routing.add("/development",developmentPage);
             homePage.routing.add("/components",componentsPage);
+            homePage.routing.add("/tables",tablesPage);
             var sHash = window.location.hash;
             routing.navigateTo(sHash).then(function()
             {

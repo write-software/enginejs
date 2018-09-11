@@ -35,23 +35,6 @@ var lstGroup = new listgroup({
     }
 },categoryModel);
 
-var tb = new table({
-    id:'tableData',
-    dataBind:'data',
-    pageLength:9,
-    style:"background:#fff;",
-    columns:[
-        { title:'Name', data:'fdName' },        
-        { title:'Description', data:'fdDesc' },        
-    ],
-    methods:{
-        onrow:function(data)
-        {              
-            alert(data);        
-        }
-    }
-},dataModel);
-
 var dvproducts = new dataView({  
     id:'dvproducts',
     dataBind:'data',
