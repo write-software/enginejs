@@ -754,9 +754,9 @@ var application = baseClass.extend({
     {
         return engine.models[_model] ? true : false;
     },
-    fire:function(_component,_method)
+    fire:function(_component,_method,event)
     {
-        var ev = window.event;
+        var ev = event || window.event;
         var _self = this;
         var comp = engine.components[_component];
         return new Promise((resolve, reject) => {
@@ -2173,7 +2173,7 @@ var view = baseClass.extend({
                     var method = $(el).attr(event);
                     if (method.indexOf("." == -1) && method.indexOf("(" == -1))
                     {
-                         method = `engine.app.fire('${_self.id}','${method}')`;
+                         method = `engine.app.fire('${_self.id}','${method}',event)`;
                     }
                     else if (method.indexOf("(" == -1))
                     {
