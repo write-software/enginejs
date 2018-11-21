@@ -505,7 +505,7 @@ var baseClass = Class.extend({
         sGUID = sGUID.replaceAll(".", "_");
         return sGUID;
     },
-    urldecode:function(x)
+    urldecode:function(str)
     {
         try
         {
@@ -516,7 +516,7 @@ var baseClass = Class.extend({
             return str;
         }
     },
-    urlencode:function(x)
+    urlencode:function(str)
     {
         try
         {
@@ -2856,9 +2856,11 @@ var router = Class.extend({
                 {
 
                 }
-                break; 
+                return; 
             }
         }
+        window.location.href = document.URL;
+        window.location.reload();
     },  
     canNavigate:function(sHash)
     {
@@ -2868,6 +2870,8 @@ var router = Class.extend({
     {
         var _self = this; 
         sHash = sHash.replace("/","#");
+        if (sHash.substr(0,1) != "#")
+            sHash = "#" + sHash;
         return new Promise((resolve, reject) => {
             try
             {

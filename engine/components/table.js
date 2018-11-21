@@ -17,12 +17,14 @@ var table = component.extend({
             _model = new model ({ 
                 data: options.data 
             });
+        this.dataBind = options.dataBind
         this._super(_model,_view,options);
     },
     _onrender:function()
     {
         var _self = this;
-        var recs = this.getModel().getData().data;
+        debugger;
+        var recs = this.getModel().getData()[this.dataBind];
         setTimeout(function()
         {
             var opts = {
@@ -51,7 +53,7 @@ var table = component.extend({
         if (prop == this.options.dataBind && this.table)
         {
             this.table.clear().draw();
-            this.table.rows.add(modeldata.data).draw( false );
+            this.table.rows.add(modeldata[this.dataBind]).draw( false );
         }
     },
 });    
