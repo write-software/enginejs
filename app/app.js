@@ -1,9 +1,11 @@
 
-var app = new application("Engine JS Demo",{
+var app = new engine("Engine JS Demo",{
     methods:{
-       query: function(selector) {
-           return this.query(selector);
-       }
+        uiReady: function() 
+        {
+            $ui.uiReady();
+            // Add your own UI initialisation or updates here
+        }
    }
 });
 

@@ -17,13 +17,12 @@ var table = component.extend({
             _model = new model ({ 
                 data: options.data 
             });
-        this.dataBind = options.dataBind
+        this.dataBind = options.dataBind;
         this._super(_model,_view,options);
     },
     _onrender:function()
     {
         var _self = this;
-        debugger;
         var recs = this.getModel().getData()[this.dataBind];
         setTimeout(function()
         {
@@ -41,12 +40,24 @@ var table = component.extend({
             $('#'+_self._id + ' tbody').on('click', 'tr', function () 
                 {
                     var data = _self.table.row( this ).data();
-                    _self.onrow.call(this,data)
-                } );  
+                     $(this).toggleClass('en_selected');
+                    _self.onrow.call(this,data);
+                } );
+            if (_self.afterrender) _self.afterrender.call(_self ) ;
         },150);
     },
     onrow:function(data)
     {
+    },
+    getSelected:function()
+    {
+        var _self = this;
+        return _self.table.rows('.en_selected').data();
+    },
+    clearSelection:function()
+    {
+        var _self = this;
+        $('#'+_self._id + ' tbody').find('.en_selected').removeClass('en_selected');
     },
     _ondatachange:function(prop,value,modeldata)
     {

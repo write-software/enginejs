@@ -7,7 +7,8 @@ var dataView = component.extend({
         options.data =  options.data || [];
         options.dataBind = options.dataBind || "data";
         options.cls = options.cls || "dataview";
-        let html = `<div id='${options.id}' class='${options.cls}' en-bind="${options.dataBind}"></div>`;
+        options.style = options.style || "";
+        let html = `<div id='${options.id}' class='${options.cls}' en-bind="${options.dataBind}" style='${options.style}'></div>`;
         let _view = new view(html);
         if (!_model)
             _model = new model ({ 

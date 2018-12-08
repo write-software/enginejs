@@ -1,26 +1,9 @@
-/****************************************************************
- *
- * The author of this software is Steve Egginton.
- *
- * Copyright (c) 2018 The Write Software Company Limited.
- *
- * Permission to use, copy, modify, and distribute this software for any
- * purpose without fee is hereby granted, provided that this entire notice
- * is included in all copies of any software which is or includes a copy
- * or modification of this software and in all copies of the supporting
- * documentation for such software.
- *
- * THIS SOFTWARE IS BEING PROVIDED "AS IS", WITHOUT ANY EXPRESS OR IMPLIED
- * WARRANTY.  IN PARTICULAR, NEITHER THE AUTHOR NOR WRITE SOFTWARE MAKES ANY
- * REPRESENTATION OR WARRANTY OF ANY KIND CONCERNING THE MERCHANTABILITY
- * OF THIS SOFTWARE OR ITS FITNESS FOR ANY PARTICULAR PURPOSE.
- *
- ***************************************************************/
-if (typeof engine === "undefined") {
-    throw new Error("engine core needs to be before this file");
+if (typeof jQuery === "undefined") {
+    throw new Error("jQuery plugins need to be before this file");
 }
 
-engine.options = {
+$ui = {};
+$ui.options = {
     colors: {
         red: '#F44336',
         pink: '#E91E63',
@@ -63,7 +46,7 @@ engine.options = {
 *  You can manage the left sidebar menu options
 *  
 */
-engine.leftSideBar = {
+$ui.leftSideBar = {
     activate: function () {
         var _this = this;
         var $body = $('body');
@@ -93,7 +76,6 @@ engine.leftSideBar = {
         });
 
         //Collapse or Expand Menu
-        $('.menu-toggle').unbind('click');
         $('.menu-toggle').on('click', function (e) {
             var $this = $(this);
             var $content = $this.next();
@@ -127,7 +109,7 @@ engine.leftSideBar = {
     },
     setMenuHeight: function (isFirstTime) {
         if (typeof $.fn.slimScroll != 'undefined') {
-            var configs = engine.options.leftSideBar;
+            var configs = $ui.options.leftSideBar;
             var height = ($(window).height() - ($('.legal').outerHeight() + $('.user-info').outerHeight() + $('.navbar').innerHeight()));
             var $el = $('.list');
 
@@ -141,7 +123,7 @@ engine.leftSideBar = {
             });
 
             //Scroll active menu item when page load, if option set = true
-            if (engine.options.leftSideBar.scrollActiveItemWhenPageLoad) {
+            if ($ui.options.leftSideBar.scrollActiveItemWhenPageLoad) {
                 var activeItemOffsetTop = $('.menu .list li.active')[0].offsetTop;
                 if (activeItemOffsetTop > 150) $el.slimscroll({ scrollTo: activeItemOffsetTop + 'px' });
             }
@@ -158,7 +140,7 @@ engine.leftSideBar = {
             });
         }
 
-        if (width < engine.options.leftSideBar.breakpointWidth) {
+        if (width < $ui.options.leftSideBar.breakpointWidth) {
             $body.addClass('ls-closed');
             $openCloseBar.fadeIn();
         }
@@ -184,7 +166,7 @@ engine.leftSideBar = {
             borderRadius: '0',
             railBorderRadius: '0'
         });
-    },    
+    },   
     isOpen: function () {
         return $('body').hasClass('overlay-open');
     }
@@ -195,7 +177,7 @@ engine.leftSideBar = {
 *  You can manage the right sidebar menu options
 *  
 */
-engine.rightSideBar = {
+$ui.rightSideBar = {
     activate: function () {
         var _this = this;
         var $sidebar = $('#rightsidebar');
@@ -212,43 +194,27 @@ engine.rightSideBar = {
             }
         });
 
-        $('.js-right-sidebar').unbind('click');
         $('.js-right-sidebar').on('click', function () {
             $sidebar.toggleClass('open');
             if (_this.isOpen()) { $overlay.fadeIn(); } else { $overlay.fadeOut(); }
         });
+        $('.nav-tabs a:first').tab('show');
     },
-    rightSideBar:{
-        activate: function () {
-            var _this = this;
-            var $sidebar = $('#rightsidebar');
-            var $overlay = $('.overlay');
-    
-            //Close sidebar
-            $(window).click(function (e) {
-                var $target = $(e.target);
-                if (e.target.nodeName.toLowerCase() === 'i') { $target = $(e.target).parent(); }
-    
-                if (!$target.hasClass('js-right-sidebar') && _this.isOpen() && $target.parents('#rightsidebar').length === 0) {
-                    if (!$target.hasClass('bars')) $overlay.fadeOut();
-                    $sidebar.removeClass('open');
-                }
-            });
-    
-            $('.js-right-sidebar').unbind('click');
-            $('.js-right-sidebar').on('click', function () {
-                $sidebar.toggleClass('open');
-                if (_this.isOpen()) { $overlay.fadeIn(); } else { $overlay.fadeOut(); }
-            });
-        },
-        isOpen: function () {
-            return $('.right-sidebar').hasClass('open');                         
-        }
-    },    
     isOpen: function () {
         return $('.right-sidebar').hasClass('open');
+    },
+    open: function (ev) {
+        $('#rightsidebar').toggleClass('open');
+        if (this.isOpen()) { $('.overlay').fadeIn(); } else { $('.overlay').fadeOut(); }
+        ev.stopPropagation();
+    },
+    close: function (ev) {
+        $('#rightsidebar').removeClass('open');
+        if (this.isOpen()) { $('.overlay').fadeIn(); } else { $('.overlay').fadeOut(); }
+        ev.stopPropagation();
     }
 };
+
 //==========================================================================================================================
 
 /* Searchbar - Function ================================================================================================
@@ -256,24 +222,21 @@ engine.rightSideBar = {
 *  
 */
 var $searchBar = $('.search-bar');
-engine.search = {
+$ui.search = {
     activate: function () {
         var _this = this;
 
         //Search button click event
-        $('.js-search').unbind('click');
         $('.js-search').on('click', function () {
             _this.showSearchBar();
         });
 
         //Close search click event
-        $searchBar.find('.close-search').unbind('click');
         $searchBar.find('.close-search').on('click', function () {
             _this.hideSearchBar();
         });
 
         //ESC key on pressed
-        $searchBar.find('input[type="text"]').unbind('keyup');
         $searchBar.find('input[type="text"]').on('keyup', function (e) {
             if (e.keyCode == 27) {
                 _this.hideSearchBar();
@@ -295,20 +258,18 @@ engine.search = {
 *  You can manage the navbar
 *  
 */
-engine.navbar = {
+$ui.navbar = {
     activate: function () {
         var $body = $('body');
         var $overlay = $('.overlay');
 
         //Open left sidebar panel
-        $('.bars').unbind('click');
         $('.bars').on('click', function () {
             $body.toggleClass('overlay-open');
             if ($body.hasClass('overlay-open')) { $overlay.fadeIn(); } else { $overlay.fadeOut(); }
         });
 
         //Close collapse bar on click event
-        $('nav [data-close="true"]').unbind('click');
         $('.nav [data-close="true"]').on('click', function () {
             var isVisible = $('.navbar-toggle').is(':visible');
             var $navbarCollapse = $('.navbar-collapse');
@@ -327,16 +288,14 @@ engine.navbar = {
 *  You can manage the inputs(also textareas) with name of class 'form-control'
 *  
 */
-engine.input = {
+$ui.input = {
     activate: function () {
         //On focus event
-        $('.form-control').unbind('focus');
         $('.form-control').focus(function () {
             $(this).parent().addClass('focused');
         });
 
         //On focusout event
-        $('.form-control').unbind('focusout');
         $('.form-control').focusout(function () {
             var $this = $(this);
             if ($this.parents('.form-group').hasClass('form-float')) {
@@ -366,7 +325,7 @@ engine.input = {
 *  You can manage the 'select' of form elements
 *  
 */
-engine.select = {
+$ui.select = {
     activate: function () {
         if ($.fn.selectpicker) { $('select:not(.ms)').selectpicker(); }
     }
@@ -378,7 +337,7 @@ engine.select = {
 *  
 */
 
-engine.dropdownMenu = {
+$ui.dropdownMenu = {
     activate: function () {
         var _this = this;
 
@@ -410,7 +369,7 @@ engine.dropdownMenu = {
         Waves.init();
     },
     dropdownEffect: function (target) {
-        var effectIn = engine.options.dropdownMenu.effectIn, effectOut = engine.options.dropdownMenu.effectOut;
+        var effectIn = $ui.options.dropdownMenu.effectIn, effectOut = $ui.options.dropdownMenu.effectOut;
         var dropdown = $(target), dropdownMenu = $('.dropdown-menu', target);
 
         if (dropdown.length > 0) {
@@ -463,7 +422,7 @@ var firefox = 'Mozilla Firefox';
 var chrome = 'Google Chrome';
 var safari = 'Safari';
 
-engine.browser = {
+$ui.browser = {
     activate: function () {
         var _this = this;
         var className = _this.getClassName();
@@ -513,14 +472,34 @@ engine.browser = {
         }
     }
 };
+
+$ui.uiReady = function() 
+{
+    // Should really only call this once
+    return new Promise((resolve, reject) => {
+        try
+        {
+            $ui.input.activate();
+            $ui.navbar.activate();
+            $ui.dropdownMenu.activate();
+            $ui.select.activate();                
+            resolve()
+        }
+        catch(e)
+        {
+            reject(e); 
+        }    
+    });                    
+}
+
 //==========================================================================================================================
 
 $(function () {
-    engine.browser.activate();
-    if (engine.leftSideBar)
-        engine.leftSideBar.activate();
-    if (engine.rightSideBar)
-        engine.rightSideBar.activate();
+    $ui.browser.activate();
+    if ($ui.leftSideBar)
+        $ui.leftSideBar.activate();
+    if ($ui.rightSideBar)
+        $ui.rightSideBar.activate();
     setTimeout(function () { $('.page-loader-wrapper').fadeOut(); }, 50);
     try{
         //Textarea auto growth

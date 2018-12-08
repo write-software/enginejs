@@ -10,6 +10,8 @@ var select = component.extend({
         options.data =  options.data || [];
         options.dataBind = options.dataBind || "data";
         options.dataUpdate = options.dataUpdate || "";    
+        options.optionValue = options.optionValue || "value";
+        options.optionText = options.optionText || "text";
         if (!_model)
             _model = new model ({ 
                 text: options.text,
@@ -19,7 +21,7 @@ var select = component.extend({
         let html = `
         <div class="form-group">
             <template en-template="${options.dataBind}">
-                <option id="{id}" value="{value}">{text}</option>
+                <option id="{id}" value="{${options.optionValue}}">{${options.optionText}}</option>
             </template>
             <select id='${options.id}-list'class="form-control" ${options.multiple} data-type="component" en-bind="${options.dataBind}" en-update="${options.dataUpdate}">
             </select>

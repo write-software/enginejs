@@ -10,7 +10,7 @@ var dataColumns = component.extend({
         let size = 12/options.columns;
         for (let i = 0;i < options.columns;i++)
         {
-            sColumns += `<div class="col-${size}" en-column="${i}"></div>`;
+            sColumns += `<div class="col-md-${size}" en-column="${i}"></div>`;
         }
         let html = `<div id='${options.id}' class='row ${options.cls}'>${sColumns}</div>`;
         let _view = new view(html);

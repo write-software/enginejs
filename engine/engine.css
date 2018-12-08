@@ -41,9 +41,6 @@ h3 {
     min-height:100vh;
 }
 
-.en-yscroll {
-    overflow-y:auto;
-}
 
 input:focus,
 select:focus,
@@ -65,6 +62,10 @@ button:focus {
 
 .nomargin {
     margin: 0  
+}
+
+.bold {
+    font-weight:bold;
 }
 
 .en-list {
@@ -347,6 +348,13 @@ ol.upload-files-list .upload-file .upload-progress-bar {
     margin-left:-10px;
     margin-top:-8px;
 }
+.en-fullheight{
+    min-height:100vh;
+}
+
+.en-yscroll {
+    overflow-y:auto;
+}
 
 .en-logo {
     vertical-align: middle;
@@ -358,6 +366,37 @@ ol.upload-files-list .upload-file .upload-progress-bar {
     cursor:pointer;
 }
 
+.en-uppercase {
+    text-transform: uppercase;
+}
+
+.en-padding-5 {
+    padding:5px;
+}
+.en-padding-10 {
+    padding:10px;
+}
+.en-padding-15 {
+    padding:15px;
+}
+.en-padding-20 {
+    padding:20px;
+}
+
+.en-lowercase {
+    text-transform: lowercase;
+}
+
 .dvcard{
     margin: 10px;
+}
+
+.en_selected {
+    background: #aab7d1 !important;
+}
+
+.dataview {
+    overflow-y:auto;
+    overflow-x:hidden;
+    height:100%;
 }

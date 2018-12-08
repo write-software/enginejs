@@ -27,15 +27,108 @@
 */
 ////////////////////////////////////////////////////////////////////////////
 
-if (typeof jQuery === "undefined") {
-    throw new Error("jQuery plugins need to be before this file");
-}
-
 //------------------------------------------------------------------------------
 // Private gloval vars
 
 let _ready;
 window._appName = "EngineJS";
+
+////////////////////////////////////////////////////////////////////////////
+/*
+    _core
+
+    This global object is not accessed directly but helps EngineJS keep a track
+    of all create objects.
+    
+*/
+////////////////////////////////////////////////////////////////////////////
+window._core = {
+    app:null,
+    routers:{},
+    components:{},
+    models:{},
+    constants:{},
+    log:function(x)
+    {
+        console.log(x);
+    },
+    attachComponent:function(name,_component)
+    {
+        if (!_component instanceof component) 
+        {
+            this.log("WARNING: attachComponent() parameter not of class component");
+            return;
+        }
+        try
+        {
+            this.components[name]  = _component;
+        }
+        catch(e)
+        {
+        }        
+    },
+    attachModel:function(name,_model)
+    {
+        if (!_model instanceof model) 
+        {
+            this.log("WARNING: attachModel() parameter not of class model");
+            return;
+        }
+        try
+        {
+            this.models[name]  = _model;
+        }
+        catch(e)
+        {
+        }        
+    },
+    attachConstants:function(name,_constant)
+    {
+        if (typeof _constant != "string") 
+        {
+            this.log("WARNING: attachConstants() parameter not of type string / Const");
+            return;
+        }
+        try
+        {
+            this.constants[name]  = _constant;
+        }
+        catch(e)
+        {
+        }        
+    },
+    attachRouter:function(name,_router)
+    {
+        if (!_router instanceof router) 
+        {
+            this.log("WARNING: attachRouter() parameter not of class router");
+            return;
+        }
+        try
+        {
+            this.routers[name]  = _router;
+        }
+        catch(e)
+        {
+        }        
+    },
+    isModel:function(name)
+    {
+        return this.models[name] == null ? false : true;
+    },
+    isComponent:function(name)
+    {
+        return this.components[name] == null ? false : true;
+    },
+    isConstant:function(name)
+    {
+        return this.constants[name] == null ? false : true;
+    },
+    isRouter:function(name)
+    {
+        return this.routers[name] == null ? false : true;
+    }
+};
 
 ////////////////////////////////////////////////////////////////////////////
 /*
@@ -198,105 +291,10 @@ function _import(scripts,callback) {
     };
 })();
 
-////////////////////////////////////////////////////////////////////////////
-/*
-    Engine JS base class object
+///////////////////////////////////////////////////////////////////////////////
+//  Engine JS base class object
+var enObject = Class.extend({});
 
-    This global object is not accessed directly but helps EngineJS keep a track
-    of all create objects.
-    
-*/
-////////////////////////////////////////////////////////////////////////////
-var enObject = Class.extend({
-    app:null,
-    routers:{},
-    components:{},
-    models:{},
-    constants:{},
-    log:function(x)
-    {
-        console.log(x);
-    },
-    attachComponent:function(name,_component)
-    {
-        if (!_component instanceof component) 
-        {
-            this.log("WARNING: attachComponent() parameter not of class component");
-            return;
-        }
-        try
-        {
-            this.components[name]  = _component;
-        }
-        catch(e)
-        {
-        }        
-    },
-    attachModel:function(name,_model)
-    {
-        if (!_model instanceof model) 
-        {
-            this.log("WARNING: attachModel() parameter not of class model");
-            return;
-        }
-        try
-        {
-            this.models[name]  = _model;
-        }
-        catch(e)
-        {
-        }        
-    },
-    attachConstants:function(name,_constant)
-    {
-        if (typeof _constant != "string") 
-        {
-            this.log("WARNING: attachConstants() parameter not of type string / Const");
-            return;
-        }
-        try
-        {
-            this.constants[name]  = _constant;
-        }
-        catch(e)
-        {
-        }        
-    },
-    attachRouter:function(name,_router)
-    {
-        if (!_router instanceof router) 
-        {
-            this.log("WARNING: attachRouter() parameter not of class router");
-            return;
-        }
-        try
-        {
-            this.routers[name]  = _router;
-        }
-        catch(e)
-        {
-        }        
-    },
-    isModel:function(name)
-    {
-        return this.models[name] == null ? false : true;
-    },
-    isComponent:function(name)
-    {
-        return this.components[name] == null ? false : true;
-    },
-    isConstant:function(name)
-    {
-        return this.constants[name] == null ? false : true;
-    },
-    isRouter:function(name)
-    {
-        return this.routers[name] == null ? false : true;
-    }
-});
-
-// Internal engine object/
-window.engine = new enObject();
 //------------------------------------------------------------------------------
 // Helpers
 
@@ -631,7 +629,7 @@ var baseClass = Class.extend({
         {
             var p = url.indexOf("?");
             var sQuery = url.substr(p+1);
-            this.url =  url.substr(0,p);
+            url =  url.substr(0,p);
             var a = sQuery.split("&");
 
             for (var i in a)
@@ -651,9 +649,1064 @@ var baseClass = Class.extend({
 
 ////////////////////////////////////////////////////////////////////////////
 /*
+    MODEL class
+
+    Main model class and responsible for manipulaing the data. This class is
+    normally used as part of a MVC component but can be used independently.
+    
+    Parameters 
+        data :    Main data as a JSON object.
+        options : A JSON object set of model control options
+        
+        options = {
+            autoStore: false,   // When true the data in this model is automatically stored to the localstore.
+                                // likewise if data already exists the model will be initialised with it. 
+            methods: {          // this optional property add custom methods to tbe model instance
+            }
+        }
+*/
+////////////////////////////////////////////////////////////////////////////
+var model = baseClass.extend({
+    init:function(data,options = {})
+    {
+        this._super();
+        var _self = this;
+        this.name = options.name || this.guid();
+        this._data = data;
+        this.state = options.state || 0;  
+        this.autoStore = options.autoStore || false;     
+        if (typeof this._data == "function") 
+        {
+            try
+            {
+                this._data = this._data.call(this);
+            }
+            catch(e)
+            {
+                this.log("WARNING: data method call failed " + e.message);  
+            }
+        }
+        this.onChange = new _event( {sender:this} );
+        this.onSync = new _event( {sender:this} );
+        if (typeof options.methods == "object")
+        {
+            for (var key in options.methods) 
+            {
+                var reserved = ["_attachController","getState","changeState","set","get","asString"];
+                if (reserved.indexOf(key) == -1)
+                    this[key] = options.methods[key];
+                else
+                    this.log("WARNING: method matched reserved name");
+            };
+        }
+        if ( _core ) 
+        {
+            _core.attachModel(this.name,this);
+        } 
+        if (this.autoStore)
+        {
+            var d = this.getLocal(this.name,this._data)
+            if (d)
+                this._data = d;
+            else
+                this.storeLocal(this.name,this._data)
+        }
+        if (this.oninit) this.oninit.call(this);
+    },
+    _attachController:function(controller,property)
+    {
+        this._controller = controller;
+    },
+    getState:function()
+    {
+        return this.state;
+    },
+    changeState:function(value)
+    {
+        this.state = value;
+    },
+    getData:function()
+    {
+        return this._data;
+    },
+    get:function(prop)
+    {
+        if (prop.substr(0, 2) != "$.") prop = "$." + prop;
+        var result = jsonPath(this._data, prop);
+        if (result.length == 1)
+            return result[0];
+        return result;
+    },
+    sync:function()
+    {
+        if (this.onbeforesync) this.onbeforesync.call(this);
+        this.onSync.notify(this,this._data);   
+    },
+    set:function(prop, value, updateBinds = true)
+    {
+        let obj = this._data;
+        let propname = prop;
+        let p = prop.indexOf(".");
+        while (p != -1)
+        {
+            let element = prop.substr(0, p);
+            obj = obj[element];
+            prop = prop.substr(p + 1);
+            p = prop.indexOf(".");
+        }
+        if (prop.substr(0,1) >= '0' && prop.substr(0,1) <= '9') prop = "_"+prop;
+        var oldvalue = obj[prop];
+        obj[prop] = value;
+        if (updateBinds) this.onChange.notify( { data:this._data,prop:propname,value:value});
+        if (this.autoStore)
+            this.storeLocal(this.name,obj)
+    },
+    applyJSON:function(json,_exclude = "", updateBinds = true)
+    {
+        if (typeof json != "object") return;
+        for (var key in json) 
+        {
+            if (_exclude )
+            {
+                if (_exclude.indexOfWord(key) == -1)
+                    this._data[key] = json[key];
+            }
+            else
+                this._data[key] = json[key];
+        }   
+        if (updateBinds && this._controller) this._controller.refreshData()     
+    },
+    push:function(prop, value)
+    {
+        let obj = this._data;
+        let p = prop.indexOf(".");
+        while (p != -1)
+        {
+            let element = prop.substr(0, p);
+            obj = obj[element];
+            prop = prop.substr(p + 1);
+            p = prop.indexOf(".");
+        }
+        if (!$.isArray(obj[prop])) return;
+        obj[prop].push(value);
+        this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
+        if (this.autoStore)
+            this.storeLocal(this.name,this._data)
+    },
+    pop:function(prop)
+    {
+        let obj = this._data;
+        let p = prop.indexOf(".");
+        while (p != -1)
+        {
+            let element = prop.substr(0, p);
+            obj = obj[element];
+            prop = prop.substr(p + 1);
+            p = prop.indexOf(".");
+        }
+        if (!$.isArray(obj[prop])) return;
+        var value = obj[prop].pop();
+        this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
+        if (this.autoStore)
+            this.storeLocal(this.name,this._data)
+        return value;
+    },
+    getAt:function(prop,index)
+    {
+        let obj = this._data;
+        let p = prop.indexOf(".");
+        while (p != -1)
+        {
+            let element = prop.substr(0, p);
+            obj = obj[element];
+            prop = prop.substr(p + 1);
+            p = prop.indexOf(".");
+        }
+        if (!$.isArray(obj[prop])) return null;
+        return obj[prop][index];
+    },
+    removeAt:function(prop,index)
+    {
+        let obj = this._data;
+        let p = prop.indexOf(".");
+        while (p != -1)
+        {
+            let element = prop.substr(0, p);
+            obj = obj[element];
+            prop = prop.substr(p + 1);
+            p = prop.indexOf(".");
+        }
+        if (!$.isArray(obj[prop])) return;
+        var value = obj[prop].splice(index,1);
+        this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
+        if (this.autoStore)
+            this.storeLocal(this.name,this._data)
+        return value;
+    },
+    insertAt:function(prop,index,value)
+    {
+        let obj = this._data;
+        let p = prop.indexOf(".");
+        while (p != -1)
+        {
+            let element = prop.substr(0, p);
+            obj = obj[element];
+            prop = prop.substr(p + 1);
+            p = prop.indexOf(".");
+        }
+        if (!$.isArray(obj[prop])) return;
+        obj[prop].splice(index,0,value);
+        this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
+        if (this.autoStore)
+            this.storeLocal(this.name,this._data)
+    },
+    asString:function()
+    {
+        return JSON.stringify (this._data);
+    },
+    search:function(_prop,_key,_value)
+    {
+        var d = this._data[_prop];
+        if (d)
+        {
+            for (var i = 0;i < d.length;i++)
+            {
+                var e = d[i][_key];
+                if (e && e == _value) return i;
+            }
+        }
+        return -1;    
+    }
+});
+
+////////////////////////////////////////////////////////////////////////////
+/*
+    VIEW class
+
+    Main view class and responsible for visiual interaction. This class can be
+    used either as hardcode HTML or HTML that is dynamically loaded.
+    
+    Parameters 
+        html : Pure HTML to be rendered as the view.
+        options : A JSON object set of view control options
+        
+        options = {
+            url:""          // the url to view dynamic loaded HTML 
+            methods: {      // this optional property add custom methods to tbe view instance
+            }
+        }
+*/
+////////////////////////////////////////////////////////////////////////////
+var view = baseClass.extend({
+    init:function(html = "", options = {})
+    {
+        this._super();
+        this._options = options;
+        this._template = "";
+        this._url = "";
+        if (options.url)
+            this._url = options.url;
+        else
+            this._template = html;
+        this.onChange = new _event( {sender:this} );
+        if (typeof options.methods == "object")
+        {
+            for (var key in options.methods) 
+            {
+                var reserved = ["_attachController","buildView","loadView","removeTemplate",
+                                "_observe","_compileHTML","_buildHTML","_applyValue","_binds",
+                                "_applyConstants","_applyData","_compile","render"];
+                if (reserved.indexOf(key) == -1)
+                    this[key] = options.methods[key];
+                else
+                    this.log("WARNING: method matched reserved name");
+            };
+        }
+    },
+    _attachController:function(controller,property)
+    {
+        this._controller = controller;
+    },
+    buildView:function(html)
+    {
+        return $(this._compile(html));
+    },
+    loadView:function(url)
+    {
+        return new Promise((resolve, reject) =>
+        {
+            try
+            {
+                $.ajax(
+                {
+                    url: url,
+                    success: function(html)
+                    {
+                        resolve(html);
+                    },
+                    error: function(jqXHR, errText, err)
+                    {
+                        reject(jqXHR, errText, err);
+                    }
+                });
+            }
+            catch (e)
+            {
+                reject(e);
+            }
+        });
+    },
+    _observe:function(element, event, attr)
+    {
+        var _self = this;
+        $(element).on(event,
+        {
+            attr: attr
+        }, function(ev)
+        {
+            if (ev.data.attr == "value")
+            {
+                let v = this.tagName == "INPUT" || this.tagName == "TEXTAREA" ? $(this).val() :  $(this).text();
+                
+                _self.onChange.notify(
+                {
+                    event: ev,
+                    value: v
+                })
+            }
+            if (ev.data.attr == "checked")
+            {
+                _self.onChange.notify(
+                {
+                    event: ev,
+                    value: $(this).is(':checked') ? "Y"  : "N"
+                })
+            }
+        });
+    },
+    _buildHTML:function(value,prop,el)
+    {
+        var _self = this;
+        var selector = '[en-template="' + prop + '"]';
+        var dataElement =  $(_self._element).children(selector);
+        if (dataElement.length == 0 && el)
+        {
+            dataElement =  $(el).children(selector);  
+        }
+        var output = "";
+        if (dataElement.length == 1)
+        {
+            var template = $(dataElement)[0].innerHTML;
+            template = _self.trim(template);
+            for(var index in value)
+            {
+                let entry = value[index];
+                if (typeof entry == "object")
+                {
+                    var line = template;
+                    for (var key in entry) 
+                    {
+                        var data = entry[key];
+                        if (typeof data == "function")
+                        {
+                            data = data.call(_self,entry,index,key);
+                        }
+                        if (typeof data == "string")
+                            line = line.replaceAll("{" + key + "}",data);                                    
+                        else
+                             line = line.replaceAll("{" + key + "}","");                                    
+                    }
+                    line = line.replaceAll("{id}",_self.id + "_" + index);   
+                    line = line.replaceAll("{index}",index);   
+                    output += line;                
+                }
+                else
+                {
+                    template = template.replaceAll("{id}",_self.id + "_" + index);   
+                    template = template.replaceAll("{index}",index);   
+                    output += template.replaceAll("{text}",entry);                            
+                }        
+            }
+        }
+        else
+        {
+            if (typeof _self._controller.beforeDataRender == "function")
+            {
+                output += _self._controller.beforeDataRender();
+            }
+            if (typeof _self._controller.dataRender == "function")
+            {
+                for(var index in value)
+                {
+                    let entry = value[index];
+                    output += _self._controller.dataRender(entry,index)
+                }
+                if (output == "")
+                {
+                    if (typeof _self._controller.emptyRender == "function")
+                    {
+                        output = _self._controller.emptyRender();
+                    }
+                }
+            }
+            else
+                return null;
+        }
+        return output;
+    },
+    _compileHTML:function(html,data)
+    {
+        var _self = this;
+        try{
+            var template = Handlebars.compile(html);
+            var html = template(data);    
+        }
+        catch(e)
+        {
+            $debug(e.message);
+        };
+        var exp = /{%\s*([^}]+)\s*%}/g
+        var placeholders = html.match(exp);
+        for (let key in placeholders) 
+        {
+            if (placeholders.hasOwnProperty(key)) 
+            {
+                const placeholder = placeholders[key];
+                let marker = placeholder.replace("this", _self.id).replace("{%", "").replace("%}", "").trim();
+                if ( marker.indexOf("(") != -1 && marker.indexOf(")") != -1)
+                {
+                    marker = "<span class='en-bind' en-bind='" + marker + "'></span>";
+                    html = html.replace(placeholder, marker);    
+                }
+                else
+                {
+                    dot = marker.indexOf(".");
+                    if (dot != -1)
+                    {
+                        obj = marker.substr(0,dot);
+                        sProp = marker.substr(dot+1);
+                        if (_core.isModel(obj))
+                            marker = "<span class='en-bind' en-model='" + obj + "' en-bind='" + sProp + "'></span>";
+                        else
+                            marker = "<span class='en-bind' en-bind='" + marker + "'></span>";
+                    }
+                    else
+                        marker = "<span class='en-bind' en-bind='" + marker + "'></span>";
+                    html = html.replace(placeholder, marker);    
+                }
+            }
+        }
+        var exp = /{=\s*([^}]+)\s*=}/g
+        var placeholders = html.match(exp);
+        for (let key in placeholders) 
+        {
+            if (placeholders.hasOwnProperty(key)) 
+            {
+                const placeholder = placeholders[key];
+                let marker = placeholder.replace("this", _self.id).replace("{=", "").replace("=}", "").trim();
+                try
+                {
+                    let dot = marker.indexOf(".");
+                    if (dot != -1)
+                    {
+                        let sObj = marker.substr(0,dot);
+                        let sProp = marker.substr(dot+1);
+                        if (_core.app.isAttachedModel(sObj))
+                        {
+                            marker = `_core.app.getModelData("${obj}").${sProp};`;
+                        }
+                        marker = eval(marker);
+                    }
+                    else
+                    {
+                        marker = eval(marker);
+                    }
+                }
+                catch(e)
+                {
+                    marker = "";                    
+                }
+                html = html.replace(placeholder, marker);    
+            }
+        }
+        return html;
+    },
+    _applyValue:function(el,value,attr)
+    {
+        var _self = this;
+        var style = "";
+        
+        if (!attr)
+            return;
+            
+        var p = attr.indexOf(":");
+        if (p != -1)
+        {
+            style = attr.substr(p+1);
+            attr = attr.substr(0,p);
+        }
+        if (attr == "text" || attr == "string")
+        {
+            if (value.toString().indexOf("<") != -1 && value.toString().indexOf(">") != -1)
+                $(el).html(value);
+            else
+                $(el).text(value);
+        }
+        else if (attr == "html")
+        {
+            if (value.toString().indexOf("<") == -1)
+                value = value.toString().replaceAll("\n","<br/>");
+            $(el).html(value);
+        }
+        else if (attr == "number")
+            $(el).text(value.toString());
+        else if (attr == "value")
+        {
+            $(el).val(value);
+            $(el).focus();
+        }
+        else if (attr == "checked")
+        {
+            if (value == "Y")
+                $(el).prop('checked',true);
+            else
+                $(el).prop('checked',false);
+        }
+        else if (attr == "css")
+        {
+            if (style == "background-image")
+                value = "url('" + value + "')";
+            $(el).css(style,value);
+        }
+        else
+        {
+            $(el).attr(attr,value);
+        }
+    },
+    _binds:function(data,prop = "",value = "")
+    {
+        var _self = this;
+        var selector = "[en-bind]";
+        _self.data = data;
+        if (prop != "")
+            selector = '[en-bind*="' + prop + '"],[en-bind*="' + _self.id + "." + prop + '"]';
+
+        return new Promise((resolve, reject) => {
+            {
+                if (!_self._element)
+                {
+                    return;
+                }
+                $(_self._element).find(selector).each(function(index, el)
+                {
+                    let sModel = $(el).attr("en-model") || "";
+                    let sBind = $(el).attr("en-bind");
+                    let sAttr = $(el).attr("en-attr") || "html";
+                    let sProp = "";
+                    let obj = "";
+                    let dot = sBind.indexOf(".");
+                    if (dot != -1)
+                        sProp = sBind.substr(dot+1);
+                    else
+                        sProp = sBind;
+                    if (sModel != "")
+                        _self.model = _core.app.getModelData(sModel);
+                    else
+                        _self.model = _self.data;
+
+                    if (sBind.indexOfWord("app.") != -1) sBind = sBind.replaceAll("app.","_core.app.");
+                    if ( sBind.indexOf("(") == -1 && sBind.indexOf(")") == -1)
+                    {
+                        if (sBind.indexOfWord("_self.") != -1) sBind = sBind.replaceAll("_self.","_self.model.");
+                    }
+            
+                    dot = sBind.indexOf(".");
+                    if (dot != -1)
+                    {
+                        obj = sBind.substr(0,dot);
+                        if (_self.model.hasOwnProperty(obj))
+                        {
+                            sBind = "_self.model." + sBind;
+                        }
+                        else
+                        {
+                            if (obj == "this")
+                            {
+                                sBind = sBind.replace("this","_self.model");
+                            }
+                            else if ( sBind.indexOf("(") != -1 && sBind.indexOf(")") != -1)
+                            {   
+                                if (sBind.indexOf("_self") != -1)
+                                    sBind = sBind.replace("_self","_core.app.components."+_self.id);  
+                            } 
+                            else
+                            {
+                                if (_core.isModel(obj))
+                                {
+                                    _self.model = _core.app.getModelData(obj); 
+                                    sBind = sBind.replace(obj+".","_self.model.");
+                                }    
+                            }   
+                        }
+                    }
+                    else
+                    {
+                        sBind = "_self.model." + sBind;
+                    }
+                    try
+                    {
+                        let value = "";
+                        try
+                        {
+                            value = eval(sBind);
+                        }
+                        catch(e)
+                        {
+                            value = "";                    
+                        }
+                        if ($.isArray(value))
+                        {
+                            value = _self._buildHTML(value,sProp,el);
+                        }
+                        if (value != null)
+                        {
+                            var outputElement = $(_self._element).find(`output[en-component="${_self.id}"]`); 
+                            if (outputElement.length == 1)
+                            {
+                                _self._applyValue(outputElement,value,sAttr);
+                            }
+                            else
+                            {
+                                var outputElement = $(_self._element).find(`[en-output="${_self.id}"]`); 
+                                if (outputElement.length == 1)
+                                {
+                                    _self._applyValue(outputElement,value,sAttr);
+                                }
+                                else
+                                {                                    
+                                    _self._applyValue(el,value,sAttr);
+                                }
+                            }
+                            _self._controller.onupdatebind(sBind,value);
+                        }
+                        else if (obj)
+                        {
+                            try
+                            {                                      
+                                sProp = eval(obj+".dataUpdate");
+                                if (sProp)
+                                {
+                                    value = _self.data[sProp];
+                                    eval(obj+".select(value)");
+                                }
+                            }
+                            catch(e)
+                            {
+                                value = "";                    
+                            }                                
+                        }
+                    }
+                    catch(e)
+                    {
+                        _self.log(e.message);
+                    }
+                });
+                if ($(_self._element)[0].hasAttribute("en-bind")) 
+                {
+                    let sBind = $(_self._element).attr("en-bind");
+                    let sAttr = $(_self._element).attr("en-attr") || "html";
+                    let sProp = sBind.replace("this.","");
+
+                    if (sProp == prop || prop == "")
+                    {
+                        let value = data[sProp];
+                        if ($.isArray(value))
+                        {
+                            value = _self._buildHTML(value,sProp);
+                        }
+                        if (value != null)
+                        {
+                            var outputElement = $(_self._element).find("output"); 
+                            if (outputElement.length == 1)
+                                _self._applyValue(outputElement,value,sAttr)
+                            else
+                            {
+                                var outputElement = $(_self._element).find(`[en-output="${_self.id}"]`); 
+                                if (outputElement.length == 1)
+                                {
+                                    _self._applyValue(outputElement,value,sAttr);
+                                }
+                                else
+                                {             
+                                    _self._applyValue(_self._element,value,sAttr);
+                                }
+                            }
+                         }
+                         else if (sBind.indexOf("this") == 0)
+                         {          
+                            value = _self[prop];
+                            if (value != null)
+                                 _self._applyValue(_self._element,value,sAttr);
+                         }
+                    }
+               }
+               resolve();
+            }
+        });
+    },
+    _applyConstants:function(html)
+    {
+        $.each(_core.constants,function(key,value)
+        {
+            html = html.replaceAll("<"+key+"/>",value);    
+            html = html.replaceAll("<"+key+"></"+key+">",value);    
+            html = html.replaceAll("<"+key+">",value);    
+        });
+        return html;
+    },
+    _applyData:function(html,data)
+    {
+        $.each(data,function(key,value)
+        {
+            html = html.replaceAll("{{this." + key + "}}",value);
+        });
+        return html;        
+    },
+    _compile:function(data)
+    {
+        var _self = this;
+        return new Promise((resolve, reject) => {
+            try {
+                let html;
+                if (!_self._template)
+                {
+                    _self.loadView(_self._url).then(function(html)
+                    {
+                        _self._template = html;            
+                        html = _self._applyConstants(html);
+                        html = _self._compileHTML(html,data);
+                        resolve(html);
+                    });
+                }
+                else
+                {
+                    html = _self._applyConstants(_self._template);
+                    html = _self._compileHTML(html,data);
+                    resolve(html);
+                }
+            }
+            catch (e) 
+            {
+                reject(e);
+            }
+        });
+    },
+    _applyEvents:function()
+    {
+        var _self = this;
+        $(_self._element).find("[en-observe]").each(function(index, el)
+        {
+            var sObserve = $(el).attr('en-observe');
+            _self._observe(el, 'change', sObserve);
+        });           
+        var events = ['en-click','en-dblclick','en-focus','en-blur'];
+        for (const key in events) {
+            if (events.hasOwnProperty(key)) {
+                const event = events[key];
+                $(_self._element).find("["+event+"]").each(function(index, el)
+                {
+                    var method = $(el).attr(event);
+                    if (method.indexOf("." == -1) && method.indexOf("(" == -1))
+                    {
+                         method = `_core.app.fire('${_self.id}','${method}')`;
+                    }
+                    else if (method.indexOf("(" == -1))
+                    {
+                        method += "()";                   
+                    }
+                    $(el).attr(event.replace("en-","on"),method);
+                });            
+                        
+            }
+        }
+    },
+    render:function(selector, data, id = "", append = false, replace = false)
+    {
+        let _self = this;
+        _self.id = id;
+        _self.data = data;
+        return new Promise((resolve, reject) => {
+            try
+            {
+                this._compile(data).then(function(html)
+                {
+                    _self._element = $(html);
+                    if ( _self._element.length != 1)
+                    {
+                        if (id)
+                            _self._element = $('<div id="' + id + '" class="component">' + html + '</div>');
+                        else
+                            _self._element = $('<div class="component">' + html + '</div>');
+                    }
+                    if (append)
+                    {
+                        $(selector).append(_self._element);
+                        _self._binds(data);
+                        _self._applyEvents();
+                    }
+                    else if (replace)
+                    {
+                        $(selector).replaceWith(_self._element);
+                        _self._applyEvents();
+                        _self._binds(data);
+                    }
+                    else
+                    {
+                        $(selector).html(_self._element);            
+                        _self._binds(data);
+                        _self._applyEvents();
+                    }
+                    $(_self._element).find("*").attr("en-component", _self.id);
+                    resolve(_self._element);
+                })
+            }
+            catch(e)
+            {
+                reject(e);
+            }
+        });
+    },
+    getElement:function()
+    {
+        return this._element;
+    }
+});
+
+////////////////////////////////////////////////////////////////////////////
+/*
+    COMPONENT class
+
+    Main component or controller class and responsible for binding the view and model together.
+    
+    Parameters 
+        _model : Model to be used (MUST EXISTS)
+        _view  : VIEW to be used (MUST EXISTS)
+        options : A JSON object set of component control options
+        
+        options = {
+            id:""           // ID of component if not provided one is generated. 
+            methods: {      // this optional property add custom methods to tbe component instance
+                // Overrides
+                ondatachange
+            }
+        }
+*/
+////////////////////////////////////////////////////////////////////////////
+component = baseClass.extend({
+    init:function(_model, _view, options = {})
+    {
+        this._super();
+        let _self = this;
+        this._model = _model;
+        this._view = _view;
+        this.selector = '';
+        this.options = options;
+        this._id = options.id || this.guid();
+        // attach this component to the main app so it available globally
+        if ( _core ) 
+            _core.attachComponent(this._id,this);
+        else
+        {
+            alert("_Core Object Not Created")
+        }
+        // Create a callback on any change to the data model
+        this._model.onChange.attach(
+            (sender, arg) =>
+            {
+                _self._view._binds(arg.data,arg.prop,arg.value);
+                $('select:not(.ms)').selectpicker('refresh');
+                if (_self._ondatachange) 
+                {
+                    _self._ondatachange.call(_self,arg.prop,arg.value,arg.data);
+                }
+                if (_self.ondatachange) 
+                {
+                    _self.ondatachange.call(_self,arg.prop,arg.value,arg.data);
+                }
+            }
+        );
+        this._model.onSync.attach(
+            (sender, arg) =>
+            {
+                _self.refreshData();
+                if (_self.ondatachange) 
+                {
+                     $('select:not(.ms)').selectpicker('refresh');
+                    _self.ondatachange.call(_self,"*",null,arg.data);
+                }
+            }
+        );
+        // Create a callback on any change to the view
+        this._view.onChange.attach(
+            (sender, data) =>
+            {
+                let el = data.event.target;
+                let sProp = $(el).attr("en-bind");
+                _self._model.set(sProp, data.value);
+                if (_self.onchange) 
+                    _self.onchange.call(_self,sProp, data);
+            }
+        );
+        // Add any dynamic methods to this object
+        if (typeof options.methods == "object")
+        {
+            for (var key in options.methods) 
+            {
+                var reserved = ["render","update"];
+                if (reserved.indexOf(key) == -1)
+                    this[key] = options.methods[key];
+                else
+                    this.log("WARNING: method matched reserved name");
+            };
+        }
+        // Attach the controller to tbe view and model
+        this._view._attachController(this);
+        this._model._attachController(this);
+        if (typeof this.oninit == "function")
+            this.oninit();
+    },
+    components:function()
+    {
+        var _self = this;
+        return new Promise((resolve, reject) => {
+            try
+            {
+                $.each(_core.components,function(name,value)
+                {
+                    if (name == _self._id) return;
+                    let comp = _core.components[name];
+                    var el = $(_self._view._element).find(name); 
+                    if(el.length != 0)
+                    {
+                        comp.render(el,false,false);   
+                    }
+                });
+                resolve();
+            }
+            catch(e)
+            {
+                reject(e); 
+            }    
+        });    
+    },
+    compile:function(sHTML,data)
+    {
+        return this._view._compileHTML(sHTML,data);
+    },
+    render:function(selector,bAppend = false, bReplace = false)
+    {
+        let _self = this;
+        _self.selector = selector
+        return new Promise((resolve, reject) => {
+            try
+            {
+                if ( _self.onbeforerender)
+                    _self.onbeforerender.call(_self);
+                this._view.render(selector,this._model._data,this._id,bAppend,bReplace)
+                    .then(function(element)
+                    {
+                        _self.components().then(function()
+                        {
+                            // Make sure inherited components call parent;
+                            try{
+                               _self._onrender(element);
+                            }
+                            catch(e)
+                            {
+                                debugger;
+                            }
+                            if ( _self.onrender)
+                                _self.onrender.call(_self,element);
+                            resolve(element);
+                        });
+                    });
+            }
+            catch(e)
+            {
+                reject(e); 
+            }    
+        });    
+    },
+    //--------------------------------------------------------------------------
+    // Overrides
+    _onrender:function()
+    {   
+        // Internal onrender for inherited components 
+    },
+    _ondatachange:function()
+    {   
+        // Internal ondatachange for inherited components 
+    },
+    onupdatebind:function(sBind,value)
+    {
+    },
+    ondatachange:function()
+    {
+    
+    },
+    //--------------------------------------------------------------------------
+    update:function(data)
+    {
+        this._model.set(data);
+    },
+    focus:function(name)
+    {
+        $("#" + this._id + "-"+name).focus();
+    },
+    focusFirst:function(name)
+    {
+        $(this._view._element).find('input:text:visible:first').focus();
+    },
+    refreshEvents:function()
+    {
+        this._view._applyEvents();
+    },
+    refreshData:function()
+    {
+        this._view._binds(this._model._data);
+    },
+    fire:function(_method)
+    {
+        var _self = this;
+        return new Promise((resolve, reject) => {
+            try
+            {
+                var args = Array.prototype.slice.call(arguments, 1);
+
+                if (_self[_method]) _self[_method].apply(_self,args);
+                resolve();
+            }
+            catch(e)
+            {
+                reject(e); 
+            }    
+        });    
+    },
+    getModel:function()
+    {
+        return this._model;
+    },
+    getContainer:function()
+    {
+        return this._view._element;
+    }
+});
+
+////////////////////////////////////////////////////////////////////////////
+/*
     ENGINE class
 
-    Main application class.
+    Main application engine class.
     
     Parameters 
         _model : Model to be used (MUST EXISTS)
@@ -667,7 +1720,7 @@ var baseClass = Class.extend({
         }
 */
 ////////////////////////////////////////////////////////////////////////////
-var application = baseClass.extend({
+var engine = baseClass.extend({
     init:function(appName,options) {
         this._super();
         if (appName == null) 
@@ -675,13 +1728,13 @@ var application = baseClass.extend({
             return;
         }
         this.appName = appName;
-        if (engine.app && engine.app.appName) 
+        if (_core.app && _core.app.appName) 
         {
             this.log("WARNING: Only one app object per application");
             return;
         }
         // register with the core
-        engine.app = this;
+        _core.app = this;
         if (options)
         {
             if (typeof options.methods == "object")
@@ -748,17 +1801,17 @@ var application = baseClass.extend({
     },
     isAttachedComponent:function(_component)
     {
-        return engine.components[_component] ? true : false;
+        return _core.components[_component] ? true : false;
     },
     isAttachedModel:function(_model)
     {
-        return engine.models[_model] ? true : false;
+        return _core.models[_model] ? true : false;
     },
-    fire:function(_component,_method,event)
+    fire:function(_component,_method)
     {
-        var ev = event || window.event;
+        var ev = window.event;
         var _self = this;
-        var comp = engine.components[_component];
+        var comp = _core.components[_component];
         return new Promise((resolve, reject) => {
             try
             {
@@ -783,7 +1836,7 @@ var application = baseClass.extend({
         }
         try
         {
-            engine.components[name]  = _component;
+            _core.components[name]  = _component;
         }
         catch(e)
         {
@@ -798,7 +1851,7 @@ var application = baseClass.extend({
         }
         try
         {
-            engine.models[name]  = _model;
+            _core.models[name]  = _model;
         }
         catch(e)
         {
@@ -813,7 +1866,7 @@ var application = baseClass.extend({
         }
         try
         {
-            engine.constants[name]  = _constant;
+            _core.constants[name]  = _constant;
         }
         catch(e)
         {
@@ -828,7 +1881,7 @@ var application = baseClass.extend({
         }
         try
         {
-            engine.routers[name]  = _router;
+            _core.routers[name]  = _router;
         }
         catch(e)
         {
@@ -854,10 +1907,7 @@ var application = baseClass.extend({
         return new Promise((resolve, reject) => {
             try
             {
-                engine.input.activate();
-                engine.navbar.activate();
-                engine.dropdownMenu.activate();
-                engine.select.activate();                
+                $ui.uiReady();
                 resolve()
             }
             catch(e)
@@ -894,7 +1944,7 @@ var application = baseClass.extend({
     {
         try
         {
-            return engine.models[name];               
+            return _core.models[name];               
         }
         catch(e)
         {
@@ -905,7 +1955,7 @@ var application = baseClass.extend({
     {
         try
         {
-            return engine.models[name]._data;               
+            return _core.models[name]._data;               
         }
         catch(e)
         {
@@ -916,7 +1966,7 @@ var application = baseClass.extend({
     {
         try
         {
-            return engine.components[name];               
+            return _core.components[name];               
         }
         catch(e)
         {
@@ -1401,1059 +2451,6 @@ var http = baseClass.extend({
     }
 });
 
-
-////////////////////////////////////////////////////////////////////////////
-/*
-    MODEL class
-
-    Main model class and responsible for manipulaing the data. This class is
-    normally used as part of a MVC component but can be used independently.
-    
-    Parameters 
-        data :    Main data as a JSON object.
-        options : A JSON object set of model control options
-        
-        options = {
-            autoStore: false,   // When true the data in this model is automatically stored to the localstore.
-                                // likewise if data already exists the model will be initialised with it. 
-            methods: {          // this optional property add custom methods to tbe model instance
-            }
-        }
-*/
-////////////////////////////////////////////////////////////////////////////
-var model = baseClass.extend({
-    init:function(data,options = {})
-    {
-        this._super();
-        var _self = this;
-        this.name = options.name || this.guid();
-        this._data = data;
-        this.state = options.state || 0;  
-        this.autoStore = options.autoStore || false;     
-        if (typeof this._data == "function") 
-        {
-            try
-            {
-                this._data = this._data.call(this);
-            }
-            catch(e)
-            {
-                this.log("WARNING: data method call failed " + e.message);  
-            }
-        }
-        this.onChange = new _event( {sender:this} );
-        this.onSync = new _event( {sender:this} );
-        if (typeof options.methods == "object")
-        {
-            for (var key in options.methods) 
-            {
-                var reserved = ["_attachController","getState","changeState","set","get","asString"];
-                if (reserved.indexOf(key) == -1)
-                    this[key] = options.methods[key];
-                else
-                    this.log("WARNING: method matched reserved name");
-            };
-        }
-        if ( engine ) 
-        {
-            engine.attachModel(this.name,this);
-        } 
-        if (this.autoStore)
-        {
-            var d = this.getLocal(this.name,this._data)
-            if (d)
-                this._data = d;
-            else
-                this.storeLocal(this.name,this._data)
-        }
-        if (this.oninit) this.oninit.call(this);
-    },
-    _attachController:function(controller,property)
-    {
-        this._controller = controller;
-    },
-    getState:function()
-    {
-        return this.state;
-    },
-    changeState:function(value)
-    {
-        this.state = value;
-    },
-    getData:function()
-    {
-        return this._data;
-    },
-    get:function(prop)
-    {
-        if (prop.substr(0, 2) != "$.") prop = "$." + prop;
-        var result = jsonPath(this._data, prop);
-        if (result.length == 1)
-            return result[0];
-        return result;
-    },
-    sync:function()
-    {
-        if (this.onbeforesync) this.onbeforesync.call(this);
-        this.onSync.notify(this,this._data);   
-    },
-    set:function(prop, value, updateBinds = true)
-    {
-        let obj = this._data;
-        let propname = prop;
-        let p = prop.indexOf(".");
-        while (p != -1)
-        {
-            let element = prop.substr(0, p);
-            obj = obj[element];
-            prop = prop.substr(p + 1);
-            p = prop.indexOf(".");
-        }
-        var oldvalue = obj[prop];
-        obj[prop] = value;
-        if (updateBinds) this.onChange.notify( { data:this._data,prop:propname,value:value});
-        if (this.autoStore)
-            this.storeLocal(this.name,obj)
-    },
-    applyJSON:function(json,_exclude = "", updateBinds = true)
-    {
-        if (typeof json != "object") return;
-        for (var key in json) 
-        {
-            if (_exclude )
-            {
-                if (_exclude.indexOfWord(key) == -1)
-                    this._data[key] = json[key];
-            }
-            else
-                this._data[key] = json[key];
-        }        
-        if (updateBinds && this._controller) this._controller.refreshData()     
-    },
-    push:function(prop, value)
-    {
-        let obj = this._data;
-        let p = prop.indexOf(".");
-        while (p != -1)
-        {
-            let element = prop.substr(0, p);
-            obj = obj[element];
-            prop = prop.substr(p + 1);
-            p = prop.indexOf(".");
-        }
-        if (!$.isArray(obj[prop])) return;
-        obj[prop].push(value);
-        this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
-        if (this.autoStore)
-            this.storeLocal(this.name,this._data)
-    },
-    pop:function(prop)
-    {
-        let obj = this._data;
-        let p = prop.indexOf(".");
-        while (p != -1)
-        {
-            let element = prop.substr(0, p);
-            obj = obj[element];
-            prop = prop.substr(p + 1);
-            p = prop.indexOf(".");
-        }
-        if (!$.isArray(obj[prop])) return;
-        var value = obj[prop].pop();
-        this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
-        if (this.autoStore)
-            this.storeLocal(this.name,this._data)
-        return value;
-    },
-    getAt:function(prop,index)
-    {
-        let obj = this._data;
-        let p = prop.indexOf(".");
-        while (p != -1)
-        {
-            let element = prop.substr(0, p);
-            obj = obj[element];
-            prop = prop.substr(p + 1);
-            p = prop.indexOf(".");
-        }
-        if (!$.isArray(obj[prop])) return null;
-        return obj[prop][index];
-    },
-    removeAt:function(prop,index)
-    {
-        let obj = this._data;
-        let p = prop.indexOf(".");
-        while (p != -1)
-        {
-            let element = prop.substr(0, p);
-            obj = obj[element];
-            prop = prop.substr(p + 1);
-            p = prop.indexOf(".");
-        }
-        if (!$.isArray(obj[prop])) return;
-        var value = obj[prop].splice(index,1);
-        this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
-        if (this.autoStore)
-            this.storeLocal(this.name,this._data)
-        return value;
-    },
-    insertAt:function(prop,index,value)
-    {
-        let obj = this._data;
-        let p = prop.indexOf(".");
-        while (p != -1)
-        {
-            let element = prop.substr(0, p);
-            obj = obj[element];
-            prop = prop.substr(p + 1);
-            p = prop.indexOf(".");
-        }
-        if (!$.isArray(obj[prop])) return;
-        obj[prop].splice(index,0,value);
-        this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
-        if (this.autoStore)
-            this.storeLocal(this.name,this._data)
-    },
-    asString:function()
-    {
-        return JSON.stringify (this._data);
-    },
-    search:function(_prop,_key,_value)
-    {
-        var d = this._data[_prop];
-        if (d)
-        {
-            for (var i = 0;i < d.length;i++)
-            {
-                var e = d[i][_key];
-                if (e && e == _value) return i;
-            }
-        }
-        return -1;    
-    }
-});
-
-////////////////////////////////////////////////////////////////////////////
-/*
-    VIEW class
-
-    Main view class and responsible for visiual interaction. This class can be
-    used either as hardcode HTML or HTML that is dynamically loaded.
-    
-    Parameters 
-        html : Pure HTML to be rendered as the view.
-        options : A JSON object set of view control options
-        
-        options = {
-            url:""          // the url to view dynamic loaded HTML 
-            methods: {      // this optional property add custom methods to tbe view instance
-            }
-        }
-*/
-////////////////////////////////////////////////////////////////////////////
-var view = baseClass.extend({
-    init:function(html = "", options = {})
-    {
-        this._super();
-        this._options = options;
-        this._template = "";
-        this._url = "";
-        if (options.url)
-            this._url = options.url;
-        else
-            this._template = html;
-        this.onChange = new _event( {sender:this} );
-        if (typeof options.methods == "object")
-        {
-            for (var key in options.methods) 
-            {
-                var reserved = ["_attachController","buildView","loadView","removeTemplate",
-                                "_observe","_compileHTML","_buildHTML","_applyValue","_binds",
-                                "_applyConstants","_applyData","_compile","render"];
-                if (reserved.indexOf(key) == -1)
-                    this[key] = options.methods[key];
-                else
-                    this.log("WARNING: method matched reserved name");
-            };
-        }
-    },
-    _attachController:function(controller,property)
-    {
-        this._controller = controller;
-    },
-    buildView:function(html)
-    {
-        return $(this._compile(html));
-    },
-    loadView:function(url)
-    {
-        return new Promise((resolve, reject) =>
-        {
-            try
-            {
-                $.ajax(
-                {
-                    url: url,
-                    success: function(html)
-                    {
-                        resolve(html);
-                    },
-                    error: function(jqXHR, errText, err)
-                    {
-                        reject(jqXHR, errText, err);
-                    }
-                });
-            }
-            catch (e)
-            {
-                reject(e);
-            }
-        });
-    },
-    _observe:function(element, event, attr)
-    {
-        var _self = this;
-        $(element).unbind(event);
-        $(element).bind(event,
-        {
-            attr: attr
-        }, function(ev)
-        {
-            if (ev.data.attr == "value")
-            {
-                let v = this.tagName == "INPUT" || this.tagName == "TEXTAREA" ? $(this).val() :  $(this).text();
-                
-                _self.onChange.notify(
-                {
-                    event: ev,
-                    value: v
-                })
-            }
-            if (ev.data.attr == "checked")
-            {
-                _self.onChange.notify(
-                {
-                    event: ev,
-                    value: $(this).is(':checked') ? "Y"  : "N"
-                })
-            }
-        });
-    },
-    _buildHTML:function(value,prop,el)
-    {
-        var _self = this;
-        var selector = '[en-template="' + prop + '"]';
-        var dataElement =  $(_self._element).children(selector);
-        if (dataElement.length == 0 && el)
-        {
-            dataElement =  $(el).children(selector);  
-        }
-        var output = "";
-        if (dataElement.length == 1)
-        {
-            var template = $(dataElement)[0].innerHTML;
-            template = _self.trim(template);
-            for(var index in value)
-            {
-                let entry = value[index];
-                if (typeof entry == "object")
-                {
-                    var line = template;
-                    for (var key in entry) 
-                    {
-                        var data = entry[key];
-                        if (typeof data == "function")
-                        {
-                            data = data.call(_self,entry,index,key);
-                        }
-                        if (typeof data == "string")
-                            line = line.replaceAll("{" + key + "}",data);                                    
-                        else
-                             line = line.replaceAll("{" + key + "}","");                                    
-                    }
-                    line = line.replaceAll("{id}",_self.id + "_" + index);   
-                    line = line.replaceAll("{index}",index);   
-                    output += line;                
-                }
-                else
-                {
-                    template = template.replaceAll("{id}",_self.id + "_" + index);   
-                    template = template.replaceAll("{index}",index);   
-                    output += template.replaceAll("{text}",entry);                            
-                }        
-            }
-        }
-        else
-        {
-            if (typeof _self._controller.beforeDataRender == "function")
-            {
-                output += _self._controller.beforeDataRender();
-            }
-            if (typeof _self._controller.dataRender == "function")
-            {
-                for(var index in value)
-                {
-                    let entry = value[index];
-                    output += _self._controller.dataRender(entry,index)
-                }
-                if (output == "")
-                {
-                    if (typeof _self._controller.emptyRender == "function")
-                    {
-                        output = _self._controller.emptyRender();
-                    }
-                }
-            }
-            else
-                return null;
-        }
-        return output;
-    },
-    _compileHTML:function(html,data)
-    {
-        var _self = this;
-        try{
-            var template = Handlebars.compile(html);
-            var html = template(data);    
-        }
-        catch(e)
-        {
-            $debug(e.message);
-        };
-        var exp = /{%\s*([^}]+)\s*%}/g
-        var placeholders = html.match(exp);
-        for (let key in placeholders) 
-        {
-            if (placeholders.hasOwnProperty(key)) 
-            {
-                const placeholder = placeholders[key];
-                let marker = placeholder.replace("this", _self.id).replace("{%", "").replace("%}", "").trim();
-                if ( marker.indexOf("(") != -1 && marker.indexOf(")") != -1)
-                {
-                    marker = "<span class='en-bind' en-bind='" + marker + "'></span>";
-                    html = html.replace(placeholder, marker);    
-                }
-                else
-                {
-                    dot = marker.indexOf(".");
-                    if (dot != -1)
-                    {
-                        obj = marker.substr(0,dot);
-                        sProp = marker.substr(dot+1);
-                        if (engine.isModel(obj))
-                            marker = "<span class='en-bind' en-model='" + obj + "' en-bind='" + sProp + "'></span>";
-                        else
-                            marker = "<span class='en-bind' en-bind='" + marker + "'></span>";
-                    }
-                    else
-                        marker = "<span class='en-bind' en-bind='" + marker + "'></span>";
-                    html = html.replace(placeholder, marker);    
-                }
-            }
-        }
-        var exp = /{=\s*([^}]+)\s*=}/g
-        var placeholders = html.match(exp);
-        for (let key in placeholders) 
-        {
-            if (placeholders.hasOwnProperty(key)) 
-            {
-                const placeholder = placeholders[key];
-                let marker = placeholder.replace("this", _self.id).replace("{=", "").replace("=}", "").trim();
-                try
-                {
-                    let dot = marker.indexOf(".");
-                    if (dot != -1)
-                    {
-                        let sObj = marker.substr(0,dot);
-                        let sProp = marker.substr(dot+1);
-                        if (engine.app.isAttachedModel(sObj))
-                        {
-                            marker = `engine.app.getModelData("${obj}").${sProp};`;
-                        }
-                        marker = eval(marker);
-                    }
-                    else
-                    {
-                        marker = eval(marker);
-                    }
-                }
-                catch(e)
-                {
-                    marker = "";                    
-                }
-                html = html.replace(placeholder, marker);    
-            }
-        }
-        return html;
-    },
-    _applyValue:function(el,value,attr)
-    {
-        var _self = this;
-        var style = "";
-        
-        if (!attr)
-            return;
-            
-        var p = attr.indexOf(":");
-        if (p != -1)
-        {
-            style = attr.substr(p+1);
-            attr = attr.substr(0,p);
-        }
-        if (attr == "text" || attr == "string")
-        {
-            if (value.toString().indexOf("<") != -1 && value.toString().indexOf(">") != -1)
-                $(el).html(value);
-            else
-                $(el).text(value);
-        }
-        else if (attr == "html")
-        {
-            if (value.toString().indexOf("<") == -1)
-                value = value.toString().replaceAll("\n","<br/>");
-            $(el).html(value);
-        }
-        else if (attr == "number")
-            $(el).text(value.toString());
-        else if (attr == "value")
-        {
-            $(el).val(value);
-            $(el).focus();
-        }
-        else if (attr == "checked")
-        {
-            if (value == "Y")
-                $(el).prop('checked',true);
-            else
-                $(el).prop('checked',false);
-        }
-        else if (attr == "css")
-        {
-            if (style == "background-image")
-                value = "url('" + value + "')";
-            $(el).css(style,value);
-        }
-        else
-        {
-            $(el).attr(attr,value);
-        }
-    },
-    _binds:function(data,prop = "",value = "")
-    {
-        var _self = this;
-        var selector = "[en-bind]";
-        _self.data = data;
-        if (prop != "")
-            selector = '[en-bind*="' + prop + '"],[en-bind*="' + _self.id + "." + prop + '"]';
-
-        return new Promise((resolve, reject) => {
-            {
-                if (!_self._element)
-                {
-                    return;
-                }
-                $(_self._element).find(selector).each(function(index, el)
-                {
-                    let sModel = $(el).attr("en-model") || "";
-                    let sBind = $(el).attr("en-bind");
-                    let sAttr = $(el).attr("en-attr") || "html";
-                    let sProp = "";
-                    let obj = "";
-                    let dot = sBind.indexOf(".");
-                    if (dot != -1)
-                        sProp = sBind.substr(dot+1);
-                    else
-                        sProp = sBind;
-                    if (sModel != "")
-                        _self.model = engine.app.getModelData(sModel);
-                    else
-                        _self.model = _self.data;
-
-                    if (sBind.indexOfWord("app.") != -1) sBind = sBind.replaceAll("app.","engine.app.");
-                    if ( sBind.indexOf("(") == -1 && sBind.indexOf(")") == -1)
-                    {
-                        if (sBind.indexOfWord("_self.") != -1) sBind = sBind.replaceAll("_self.","_self.model.");
-                    }
-            
-                    dot = sBind.indexOf(".");
-                    if (dot != -1)
-                    {
-                        obj = sBind.substr(0,dot);
-                        if (_self.model.hasOwnProperty(obj))
-                        {
-                            sBind = "_self.model." + sBind;
-                        }
-                        else
-                        {
-                            if (obj == "this")
-                            {
-                                sBind = sBind.replace("this","_self.model");
-                            }
-                            else if ( sBind.indexOf("(") != -1 && sBind.indexOf(")") != -1)
-                            {   
-                                if (sBind.indexOf("_self") != -1)
-                                    sBind = sBind.replace("_self","engine.app.components."+_self.id);  
-                            } 
-                            else
-                            {
-                                if (engine.isModel(obj))
-                                {
-                                    _self.model = engine.app.getModelData(obj); 
-                                    sBind = sBind.replace(obj+".","_self.model.");
-                                }    
-                            }   
-                        }
-                    }
-                    else
-                    {
-                        sBind = "_self.model." + sBind;
-                    }
-                    try
-                    {
-                        let value = "";
-                        try
-                        {
-                            value = eval(sBind);
-                        }
-                        catch(e)
-                        {
-                            value = "";                    
-                        }
-                        if ($.isArray(value))
-                        {
-                            value = _self._buildHTML(value,sProp,el);
-                        }
-                        if (value != null)
-                        {
-                            var outputElement = $(_self._element).find(`output[en-component="${_self.id}"]`); 
-                            if (outputElement.length == 1)
-                            {
-                                _self._applyValue(outputElement,value,sAttr);
-                            }
-                            else
-                            {
-                                var outputElement = $(_self._element).find(`[en-output="${_self.id}"]`); 
-                                if (outputElement.length == 1)
-                                {
-                                    _self._applyValue(outputElement,value,sAttr);
-                                }
-                                else
-                                {                                    
-                                    _self._applyValue(el,value,sAttr);
-                                }
-                            }
-                            _self._controller.onupdatebind(sBind,value);
-                        }
-                        else if (obj)
-                        {
-                            try
-                            {                                      
-                                sProp = eval(obj+".dataUpdate");
-                                if (sProp)
-                                {
-                                    value = _self.data[sProp];
-                                    eval(obj+".select(value)");
-                                }
-                            }
-                            catch(e)
-                            {
-                                value = "";                    
-                            }                                
-                        }
-                    }
-                    catch(e)
-                    {
-                        _self.log(e.message);
-                    }
-                });
-                if ($(_self._element)[0].hasAttribute("en-bind")) 
-                {
-                    let sBind = $(_self._element).attr("en-bind");
-                    let sAttr = $(_self._element).attr("en-attr") || "html";
-                    let sProp = sBind.replace("this.","");
-
-                    if (sProp == prop || prop == "")
-                    {
-                        let value = data[sProp];
-                        if ($.isArray(value))
-                        {
-                            value = _self._buildHTML(value,sProp);
-                        }
-                        if (value != null)
-                        {
-                            var outputElement = $(_self._element).find("output"); 
-                            if (outputElement.length == 1)
-                                _self._applyValue(outputElement,value,sAttr)
-                            else
-                            {
-                                var outputElement = $(_self._element).find(`[en-output="${_self.id}"]`); 
-                                if (outputElement.length == 1)
-                                {
-                                    _self._applyValue(outputElement,value,sAttr);
-                                }
-                                else
-                                {             
-                                    _self._applyValue(_self._element,value,sAttr);
-                                }
-                            }
-                         }
-                         else if (sBind.indexOf("this") == 0)
-                         {          
-                            value = _self[prop];
-                            if (value != null)
-                                 _self._applyValue(_self._element,value,sAttr);
-                         }
-                    }
-               }
-               resolve();
-            }
-        });
-    },
-    _applyConstants:function(html)
-    {
-        $.each(engine.constants,function(key,value)
-        {
-            html = html.replaceAll("<"+key+"/>",value);    
-            html = html.replaceAll("<"+key+"></"+key+">",value);    
-            html = html.replaceAll("<"+key+">",value);    
-        });
-        return html;
-    },
-    _applyData:function(html,data)
-    {
-        $.each(data,function(key,value)
-        {
-            html = html.replaceAll("{{this." + key + "}}",value);
-        });
-        return html;        
-    },
-    _compile:function(data)
-    {
-        var _self = this;
-        return new Promise((resolve, reject) => {
-            try {
-                let html;
-                if (!_self._template)
-                {
-                    _self.loadView(_self._url).then(function(html)
-                    {
-                        _self._template = html;            
-                        html = _self._applyConstants(html);
-                        html = _self._compileHTML(html,data);
-                        resolve(html);
-                    });
-                }
-                else
-                {
-                    html = _self._applyConstants(_self._template);
-                    html = _self._compileHTML(html,data);
-                    resolve(html);
-                }
-            }
-            catch (e) 
-            {
-                reject(e);
-            }
-        });
-    },
-    _applyEvents:function()
-    {
-        var _self = this;
-        $(_self._element).find("[en-observe]").each(function(index, el)
-        {
-            var sObserve = $(el).attr('en-observe');
-            _self._observe(el, 'change', sObserve);
-        });           
-        var events = ['en-click','en-dblclick','en-focus','en-blur'];
-        for (const key in events) {
-            if (events.hasOwnProperty(key)) {
-                const event = events[key];
-                $(_self._element).find("["+event+"]").each(function(index, el)
-                {
-                    var method = $(el).attr(event);
-                    if (method.indexOf("." == -1) && method.indexOf("(" == -1))
-                    {
-                         method = `engine.app.fire('${_self.id}','${method}',event)`;
-                    }
-                    else if (method.indexOf("(" == -1))
-                    {
-                        method += "()";                   
-                    }
-                    $(el).attr(event.replace("en-","on"),method);
-                });            
-                        
-            }
-        }
-    },
-    render:function(selector, data, id = "", append = false, replace = false)
-    {
-        let _self = this;
-        _self.id = id;
-        _self.data = data;
-        return new Promise((resolve, reject) => {
-            try
-            {
-                this._compile(data).then(function(html)
-                {
-                    _self._element = $(html);
-                    if ( _self._element.length != 1)
-                    {
-                        if (id)
-                            _self._element = $('<div id="' + id + '" class="component">' + html + '</div>');
-                        else
-                            _self._element = $('<div class="component">' + html + '</div>');
-                    }
-                    if (append)
-                    {
-                        $(selector).append(_self._element);
-                        _self._binds(data);
-                        _self._applyEvents();
-                    }
-                    else if (replace)
-                    {
-                        $(selector).replaceWith(_self._element);
-                        _self._applyEvents();
-                        _self._binds(data);
-                    }
-                    else
-                    {
-                        $(selector).html(_self._element);            
-                        _self._binds(data);
-                        _self._applyEvents();
-                    }
-                    $(_self._element).find("*").attr("en-component", _self.id);
-                    resolve(_self._element);
-                })
-            }
-            catch(e)
-            {
-                reject(e);
-            }
-        });
-    },
-    getElement:function()
-    {
-        return this._element;
-    }
-});
-
-////////////////////////////////////////////////////////////////////////////
-/*
-    COMPONENT class
-
-    Main component or controller class and responsible for binding the view and model together.
-    
-    Parameters 
-        _model : Model to be used (MUST EXISTS)
-        _view  : VIEW to be used (MUST EXISTS)
-        options : A JSON object set of component control options
-        
-        options = {
-            id:""           // ID of component if not provided one is generated. 
-            methods: {      // this optional property add custom methods to tbe component instance
-                // Overrides
-                ondatachange
-            }
-        }
-*/
-////////////////////////////////////////////////////////////////////////////
-component = baseClass.extend({
-    init:function(_model, _view, options = {})
-    {
-        this._super();
-        let _self = this;
-        this._model = _model;
-        this._view = _view;
-        this.selector = '';
-        this.options = options;
-        this._id = options.id || this.guid();
-        // attach this component to the main app so it available globally
-        if ( engine ) 
-            engine.attachComponent(this._id,this);
-        else
-        {
-            alert("Engine Object Not Created")
-        }
-        // Create a callback on any change to the data model
-        this._model.onChange.attach(
-            (sender, arg) =>
-            {
-                _self.log(arg.prop);
-                _self._view._binds(arg.data,arg.prop,arg.value);
-                $('select:not(.ms)').selectpicker('refresh');
-                if (_self._ondatachange) 
-                {
-                    _self._ondatachange.call(_self,arg.prop,arg.value,arg.data);
-                }
-                if (_self.ondatachange) 
-                {
-                    _self.ondatachange.call(_self,arg.prop,arg.value,arg.data);
-                }
-            }
-        );
-        this._model.onSync.attach(
-            (sender, arg) =>
-            {
-                _self.refreshData();
-                if (_self.ondatachange) 
-                {
-                     $('select:not(.ms)').selectpicker('refresh');
-                    _self.ondatachange.call(_self,"*",null,arg.data);
-                }
-            }
-        );
-        // Create a callback on any change to the view
-        this._view.onChange.attach(
-            (sender, data) =>
-            {
-                let el = data.event.target;
-                let sProp = $(el).attr("en-bind");
-                _self._model.set(sProp, data.value);
-                if (_self.onchange) 
-                    _self.onchange.call(_self,sProp, data);
-            }
-        );
-        // Add any dynamic methods to this object
-        if (typeof options.methods == "object")
-        {
-            for (var key in options.methods) 
-            {
-                var reserved = ["render","update"];
-                if (reserved.indexOf(key) == -1)
-                    this[key] = options.methods[key];
-                else
-                    this.log("WARNING: method matched reserved name");
-            };
-        }
-        // Attach the controller to tbe view and model
-        this._view._attachController(this);
-        this._model._attachController(this);
-        if (typeof this.oninit == "function")
-            this.oninit();
-    },
-    components:function()
-    {
-        var _self = this;
-        return new Promise((resolve, reject) => {
-            try
-            {
-                $.each(engine.components,function(name,value)
-                {
-                    if (name == _self._id) return;
-                    let comp = engine.components[name];
-                    var el = $(_self._view._element).find(name); 
-                    if(el.length != 0)
-                    {
-                        comp.render(el,false,false);   
-                    }
-                });
-                resolve();
-            }
-            catch(e)
-            {
-                reject(e); 
-            }    
-        });    
-    },
-    compile:function(sHTML,data)
-    {
-        return this._view._compileHTML(sHTML,data);
-    },
-    render:function(selector,bAppend = false, bReplace = false)
-    {
-        let _self = this;
-        _self.selector = selector
-        return new Promise((resolve, reject) => {
-            try
-            {
-                if ( _self.onbeforerender)
-                    _self.onbeforerender.call(_self);
-                this._view.render(selector,this._model._data,this._id,bAppend,bReplace)
-                    .then(function(element)
-                    {
-                        _self.components().then(function()
-                        {
-                            // Make sure inherited components call parent;
-                            try{
-                               _self._onrender(element);
-                            }
-                            catch(e)
-                            {
-                                debugger;
-                            }
-                            if ( _self.onrender)
-                                _self.onrender.call(_self,element);
-                            resolve(element);
-                        });
-                    });
-            }
-            catch(e)
-            {
-                reject(e); 
-            }    
-        });    
-    },
-    //--------------------------------------------------------------------------
-    // Overrides
-    _onrender:function()
-    {   
-        // Internal onrender for inherited components 
-    },
-    _ondatachange:function()
-    {   
-        // Internal ondatachange for inherited components 
-    },
-    onupdatebind:function(sBind,value)
-    {
-    },
-    ondatachange:function()
-    {
-    
-    },
-    //--------------------------------------------------------------------------
-    update:function(data)
-    {
-        this._model.set(data);
-    },
-    focus:function(name)
-    {
-        $("#" + this._id + "-"+name).focus();
-    },
-    focusFirst:function(name)
-    {
-        $(this._view._element).find('input:text:visible:first').focus();
-    },
-    refreshData:function()
-    {
-        this._view._binds(this._model._data);
-    },
-    fire:function(_method)
-    {
-        var _self = this;
-        return new Promise((resolve, reject) => {
-            try
-            {
-                var args = Array.prototype.slice.call(arguments, 1);
-
-                if (_self[_method]) _self[_method].apply(_self,args);
-                resolve();
-            }
-            catch(e)
-            {
-                reject(e); 
-            }    
-        });    
-    },
-    getModel:function()
-    {
-        return this._model;
-    },
-    getContainer:function()
-    {
-        return this._view._element;
-    }
-});
-
 ////////////////////////////////////////////////////////////////////////////
 /*
     DATAMAP class
@@ -2677,6 +2674,79 @@ var store = baseClass.extend({
             }    
         });        
     },
+    info:function()
+    {
+        var _self = this;
+        if (_self.type == "simple")
+        {
+            throw "Method info not allowed on type 'simple'";
+        }
+        return new Promise((resolve, reject) => {
+            try
+            {        
+                _self.db.info().then(function(info)
+                {
+                    resolve(info);
+                }).catch(function(err)
+                {
+                    reject(err); 
+                });
+            }
+            catch(e)
+            {
+                reject(e); 
+            }    
+        });        
+    },
+    getall:function(ops = { include_docs: true, attachments:true } )
+    {
+        var _self = this;
+        if (_self.type == "simple")
+        {
+            throw "Method info not allowed on type 'simple'";
+        }
+        return new Promise((resolve, reject) => {
+            try
+            {        
+                _self.db.allDocs(ops).then(function(docs)
+                {
+                    resolve(docs);
+                }).catch(function(err)
+                {
+                    reject(err); 
+                });
+            }
+            catch(e)
+            {
+                reject(e); 
+            }    
+        });        
+    },
+    login:function(user,pwd)
+    {
+        var _self = this;
+        if (_self.type == "simple")
+        {
+            throw "Method login not allowed on type 'simple'";
+        }
+        return new Promise((resolve, reject) => {
+            try
+            {  
+                debugger;      
+                _self.db.login(user,pwd).then(function(docs)
+                {
+                    resolve(docs);
+                }).catch(function(err)
+                {
+                    reject(err); 
+                });
+            }
+            catch(e)
+            {
+                reject(e); 
+            }    
+        });        
+    },
     find:function(criteria)
     {
         var _self = this;
@@ -2801,15 +2871,17 @@ var store = baseClass.extend({
 */
 ////////////////////////////////////////////////////////////////////////////
 var router = Class.extend({
-    init:function(name) {
+    init:function(name, forceNavigate) {
         if (name == null) return;
         var _self = this; 
         this.name = name || this.guid();
+        this.forceNavigate = forceNavigate;
         this.routes = [];
-        $(window).on('hashchange', function(e){
+        $(window).on('hashchange', function(e)
+        {
              _self.navigate(window.location.hash);
         });
-        engine.attachRouter(name,this);
+        _core.attachRouter(name,this);
         this.lastHASH = "";
     }, 
     goBack:function()
@@ -2840,17 +2912,15 @@ var router = Class.extend({
                     $(comp._view._element).attr("en-view","inactive");
                     comp.fire("onhide",sHash);
                 }
-                // Show view
                 target.fire("beforeNavigate",sHash);
                 $(target._view._element).attr("en-view","active");
                 target.refreshData();
                 target.fire("afterNavigate",sHash);
-                // Refresh and input components
                 try
                 {
-                    engine.input.activate();
-                    engine.dropdownMenu.activate();
-                    engine.select.activate();    
+                    $.engine.input.activate();
+                    $.engine.dropdownMenu.activate();
+                    $.engine.select.activate();    
                 }
                 catch(e)
                 {
@@ -2859,8 +2929,12 @@ var router = Class.extend({
                 return; 
             }
         }
-        window.location.href = document.URL;
-        window.location.reload();
+        if (this.forceNavigate)
+        {
+            debugger;
+            window.location.href = document.URL;
+            window.location.reload();
+        }
     },  
     canNavigate:function(sHash)
     {
@@ -2870,8 +2944,6 @@ var router = Class.extend({
     {
         var _self = this; 
         sHash = sHash.replace("/","#");
-        if (sHash.substr(0,1) != "#")
-            sHash = "#" + sHash;
         return new Promise((resolve, reject) => {
             try
             {
@@ -2944,6 +3016,19 @@ var router = Class.extend({
                 reject(e); 
             }    
         });    
+    },
+    isRoute:function(sHash)
+    {
+        var _self = this; 
+        sHash = sHash.replace("#","/");
+        for (var p in _self.routes)
+        {
+            if(_self.routes[p].hash == sHash || (sHash == "" && _self.routes[p].hash == "/") )
+                return true;
+        }
+        return false
     }
 })
 
+// Internal engine object/
+var $engine = new engine();

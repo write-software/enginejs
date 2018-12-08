@@ -40,4 +40,4 @@ const navbar = `
 </div>
 </nav>`;
 
-engine.attachConstants('navbar',navbar);
+$engine.attachConstants('navbar',navbar);

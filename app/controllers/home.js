@@ -8,12 +8,11 @@ var homePage = new component(
         methods:{
             onrender:function()
             {
-                engine.leftSideBar.setSettingListHeightAndScroll(true);
+                $ui.leftSideBar.setSettingListHeightAndScroll(true);
                 $(window).resize(function () {
-                    engine.leftSideBar.setSettingListHeightAndScroll(false);
+                    $ui.leftSideBar.setSettingListHeightAndScroll(false);
                 });
-                engine.rightSideBar.rightSideBar.activate();
-                $('.nav-tabs a:first').tab('show');
+                $ui.rightSideBar.activate();
             },
             goTo:function(page)
             {

@@ -9,19 +9,20 @@ var dialog = component.extend({
 
         options.header = options.header || "";
         options.body = options.body || "";
+        options.size = options.size || "";
         options.footer = options.footer || `<button type="button" class="btn btn-danger" data-dismiss="modal">${options.closeText}</button><button type="button" class="btn btn-primary" en-click="submit" type="submit">${options.submitText}</button>`;
         _options.id = options.id;
         let html = `
           <div class="modal fade" id="${options.id}" role="dialog">
-            <div class="modal-dialog">
+            <div class="modal-dialog ${options.size}">
             
               <!-- Modal content-->
               <div class="modal-content">
                 <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
                     <h4 class="modal-title">${options.title}</h4>
                     <br>
                     ${options.header}
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
                 </div>
                 <div class="modal-body">
                     ${options.body}
@@ -63,11 +64,11 @@ var dialog = component.extend({
         $('#'+_self._id).on('shown.bs.modal', function () 
         {
             _self.deferred = false;
-            let el = this;
-    		$delay(50, function ()
+            let el = this;                 
+    		$delay(100, function ()
     		{
                _self.refreshData();
-                $('input:text:visible:first', el).focus();
+                $(el).find('input:enabled:visible:first').focus();
     		});
         });  
     },
@@ -80,7 +81,6 @@ var dialog = component.extend({
         var _self = this;
         if (!this._view._element)
         {
-            debugger;
             this.render('body',true).then(function()
             {
                 $('#'+_self._id).modal('show');
