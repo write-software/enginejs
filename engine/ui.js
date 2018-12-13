@@ -169,6 +169,10 @@ $ui.leftSideBar = {
     },   
     isOpen: function () {
         return $('body').hasClass('overlay-open');
+    },
+    close: function (ev) {
+        $('body').removeClass('overlay-open');
+        ev.stopPropagation();
     }
 };
 //==========================================================================================================================
