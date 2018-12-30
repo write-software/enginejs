@@ -11,7 +11,7 @@ body {
 }
 
 .btn-round {
-    border-radius: 17px;
+    border-radius: 50%;
 }
 
 p li {
@@ -91,7 +91,11 @@ button:focus {
 }
 
 .en-white {
-    color:#ffffff
+    color:#ffffff;
+}
+
+.en-dark {
+    color:#010101;
 }
 
 .en-blue {
@@ -395,8 +399,54 @@ ol.upload-files-list .upload-file .upload-progress-bar {
     background: #aab7d1 !important;
 }
 
+.en-capitalize {
+    text-transform: capitalize;
+}
+
 .dataview {
     overflow-y:auto;
     overflow-x:hidden;
     height:100%;
+}
+
+@-webkit-keyframes blink {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+@-moz-keyframes blink {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+@-o-keyframes blink {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+.blink {
+    -webkit-animation: blink 2s;
+    -webkit-animation-iteration-count: infinite;
+    -moz-animation: blink 2s;
+    -moz-animation-iteration-count: infinite;
+    -o-animation: blink 2s;
+    -o-animation-iteration-count: infinite;
 }

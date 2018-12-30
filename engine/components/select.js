@@ -9,6 +9,8 @@ var select = component.extend({
         options.multiple =  options.multiple ? 'multiple' : '';
         options.data =  options.data || [];
         options.dataBind = options.dataBind || "data";
+        options.cls = options.cls || "";
+        options.style = options.style || "";
         options.dataUpdate = options.dataUpdate || "";    
         options.optionValue = options.optionValue || "value";
         options.optionText = options.optionText || "text";
@@ -19,11 +21,11 @@ var select = component.extend({
                 data: options[options.dataBind] 
             });
         let html = `
-        <div class="form-group">
+        <div class="form-group ${options.cls}" style="${options.style}">
             <template en-template="${options.dataBind}">
                 <option id="{id}" value="{${options.optionValue}}">{${options.optionText}}</option>
             </template>
-            <select id='${options.id}-list'class="form-control" ${options.multiple} data-type="component" en-bind="${options.dataBind}" en-update="${options.dataUpdate}">
+            <select id="${options.id}-list" class="form-control" ${options.multiple} data-type="component" en-bind="${options.dataBind}" en-update="${options.dataUpdate}">
             </select>
         </div>`;
         let _view = new view(html);
@@ -41,6 +43,7 @@ var select = component.extend({
             function(ev, clickedIndex, newValue, oldValue) 
             {
                 let sSelected = $(_self._view._element).find('select:not(.ms)').selectpicker('val') || "";
+                if (typeof clickedIndex == "undefined") clickedIndex = this.selectedIndex;
                 if (_self.multiple == "multiple" && sSelected.length > 0)
                 {      
                     if (sSelected[0] == "")
@@ -120,5 +123,9 @@ var select = component.extend({
         else
             $(_self._view._element).find('select:not(.ms)').selectpicker('val',_value);
         $(_self._view._element).find('select:not(.ms)').selectpicker('refresh');
+    },
+    reset:function()
+    {
+        $(this._view._element).find('select:not(.ms)').selectpicker('deselectAll');
     }
 });    

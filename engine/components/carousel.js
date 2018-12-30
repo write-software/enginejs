@@ -8,14 +8,8 @@ var carousel = component.extend({
         options.dataBind = options.dataBind || "data";
         options.cls = options.cls || "";
         let html = `
-                <div id="${options.id}" class="carousel slide ${options.cls}" data-ride="carousel">
+                <div id="${options.id}" class="carousel slide ${options.cls}" data-ride="carousel" data-interval="false">
                 <!-- Indicators -->
-                <ol class="carousel-indicators">
-                    <li data-target="#${options.id}'" data-slide-to="0" class="active"></li>
-                    <li data-target="#${options.id}'" data-slide-to="1"></li>
-                    <li data-target="#${options.id}'" data-slide-to="2"></li>
-                </ol>
-
                 <!-- Wrapper for slides -->
                 <div class="carousel-inner" role="listbox" en-bind="${options.dataBind}">
                 </div>
@@ -40,6 +34,37 @@ var carousel = component.extend({
             });
         _options.id = options.id;
         _options.methods = options.methods;
+        this._index = 0;
         this._super(_model,_view,_options);
+    },
+    onrender:function(element)
+    {
+        let _self = this;
+        $(element).on("touchstart", function(event){
+            var xClick = event.originalEvent.touches[0].pageX;
+            $(this).one("touchmove", function(event){
+                var xMove = event.originalEvent.touches[0].pageX;
+                if( Math.floor(xClick - xMove) > 5 ){
+                    $(this).carousel('next');
+                }
+                else if( Math.floor(xClick - xMove) < -5 ){
+                    $(this).carousel('prev');
+                }
+            });
+            $(".carousel").on("touchend", function(){
+                    $(this).off("touchmove");
+            });
+        });
+        $(element).carousel('pause');
+        $(element).on('slide.bs.carousel',function(e){
+            var slideFrom = $(this).find('.active').index();
+            var slideTo = $(e.relatedTarget).index();
+            _self._index = slideTo;
+            if (_self.onslide) _self.onslide.call(_self)
+        });
+    },
+    getIndex()
+    {
+        return this._index;
     }
 });    

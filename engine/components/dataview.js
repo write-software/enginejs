@@ -19,6 +19,12 @@ var dataView = component.extend({
         _options.id = options.id;
         _options.methods = options.methods;
         this._super(_model,_view,_options);
+    },
+    setSelected:function(idx)
+    {
+        $(this.getContainer()).find(".card").removeClass("dataview-select");
+        $(this.getContainer()).find('[en-index="' + idx + '"]').addClass("dataview-select");
+        this._model.set("selected",idx);
     }
 });    
 

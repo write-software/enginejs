@@ -35,7 +35,7 @@ reach = {
         win.capturePage(function(buffer)
         {
             var img = new Image();
-            var rect = { width:idev.pgWidth, height:idev.pgHeight };
+            var rect = { width:$engine.pgWidth, height:$engine.pgHeight };
 
             img.onload = function() 
             {
@@ -58,8 +58,8 @@ reach = {
     init: function() {      
 		if(typeof(Cordova) != 'undefined') {
 			reach.platformType = "Cordova";
-			reach.deviceUUID = idev.local.getLocal("deviceUUID", idev.utils.guid());
-			idev.local.storeLocal("deviceUUID", reach.deviceUUID);
+			reach.deviceUUID = $engine.getLocal("deviceUUID", $engine.guid());
+			$engine.storeLocal("deviceUUID", reach.deviceUUID);
 			document.addEventListener("deviceready", reach.onDeviceReady, false);
 		}
 		else if(typeof(nw) != 'undefined') {
@@ -196,7 +196,7 @@ reach = {
 				reach.fs.writeFile(name + ".data",data,cb,cb);
 				break;
 			default:
-				idev.local.storeLocal(name, data);
+				$engine.storeLocal(name, data);
 				cb && cb();
 		}
 	},
@@ -213,7 +213,7 @@ reach = {
                 });
 				break;
 			default:
-				var data = idev.local.getLocal(name, sDefault);
+				var data = $engine.getLocal(name, sDefault);
 				cb && cb(data);
 		}
 	},
@@ -227,7 +227,7 @@ reach = {
 			default:
                 try
                 {
-    				idev.local.storeLocal(name, ds.toJSON());
+    				$engine.storeLocal(name, ds.toJSON());
 	       			cb && cb();
                 }
                 catch(e)
@@ -247,7 +247,7 @@ reach = {
 				},cb);
 				break;
 			default:
-				var data = idev.local.getLocal(name, "[]");
+				var data = $engine.getLocal(name, "[]");
 				ds.load(data);
 				cb && cb();
 		}
@@ -309,14 +309,14 @@ reach = {
 			subFolder = list[i].shortname.substr(list[i].shortname.lastIndexOf('/')+1);
             var getObj = {
                 command: "getFile",
-                token: core.token,
-                device: core.deviceid,
-                account: core.account,
-                pincode: core.pincode,
+                token: $engine.token,
+                device: $engine.deviceid,
+                account: $engine.account,
+                pincode: $engine.pincode,
                 fileName: list[i].filename
             }
             var getStr = $.param(getObj);
-            reach.fs.downloadFile(core.serverURL + "?" + getStr, list[i].shortname, function(resp) {
+            reach.fs.downloadFile($engine.serverURL + "?" + getStr, list[i].shortname, function(resp) {
 				list[i].localname = resp;
 				i++;
 				reach.getFile(list,i);
@@ -339,13 +339,13 @@ reach = {
 	getFiles: function() {
 		reach.fs.readFile("filelist.json", function(list){
 			reach.localFiles = JSON.parse(list);
-			idev.utils.ajax({
-				url:core.serverURL,
+			$engine.ajax({
+				url:$engine.serverURL,
                 timeout:5000,
 				params:{
 					command:'getFileList',
-                    account:core.account,
-                    pincode:core.pincode
+                    account:$engine.account,
+                    pincode:$engine.pincode
 				},
 				success: function(response) {
 					if(response.success) {
@@ -361,13 +361,13 @@ reach = {
 				}
 			})
 		}, function(){
-			idev.utils.ajax({
-				url:core.serverURL,
+			$engine.ajax({
+				url:$engine.serverURL,
                 timeout:5000,
 				params:{
 					command:'getFileList',
-                    account:core.account,
-                    pincode:core.pincode
+                    account:$engine.account,
+                    pincode:$engine.pincode
 				},
 				success: function(response) {
 					if(response.success) {
@@ -378,7 +378,7 @@ reach = {
                     debugger;
 					if(err == "timeout" && jqXHR.readyState == 0) {
 						//appears we are offline
-						core.msg($tr("Please ensure online and restart to perform initial prime"));
+						$engine.warning($tr("Please ensure online and restart to perform initial prime"));
 						reach.ready = true;
 						reach.onReady();
 					} 
@@ -765,7 +765,7 @@ reach = {
 				if(saveAs) fileName = saveAs;
 				var fileURL = folder + fileName;       
 				var file = reach.node.fs.createWriteStream(fileURL);
-                if (core.secure == "Y")
+                if ($engine.secure == "Y")
                 {
     				var request = reach.node.https.get(uri, function(response) {
     					response.pipe(file);
@@ -798,7 +798,7 @@ reach = {
     },
     playAudio: function ()
     {
-        if (core.preferences.sound != "Y") return;
+        if ($engine.preferences.sound != "Y") return;
         try
         {
             ion.sound.play("beep5");
@@ -810,8 +810,7 @@ reach = {
 	//Cordova specific only!
     keyboardShowHandler: function(e)
     {
-        if (idev.pageManager.currentPage.name != 'Management')
-            SoftKeyboard.hide();
+        SoftKeyboard.hide();
     },
     presentation:{
         onerror:function(msg)
@@ -874,14 +873,7 @@ reach = {
             reach.connectionType = navigator.network.connection.type;
 			reach.resume();
 			reach.getFiles();
-			reach.fs.getFilePath("",function(dir) {
-				reach.localDir = dir;
-				$delay(0,function() {
-					var logo = reach.getLocalFile('logo.png');
-                    if (logo.substr(0,10) == "../images/")
-                        logo = null;   
-				});
-			});
+			reach.localDir = cordova.file.dataDirectory;
         }
         catch (e)
 
@@ -898,8 +890,6 @@ reach = {
         {
             if (reach.override.onBackButton)
                 reach.override.onBackButton(e);
-            else
-                idev.gotoPage(1);
         }
         catch (e)
         {}
@@ -951,7 +941,7 @@ reach = {
 			ds = reach.fetchList.shift();	//remove the item
 			ds.fetch();						//fetch the store
 		}
-        core.setOnline(true);    
+        $engine.setOnline(true);    
     },
     offLine: function ()
     {
@@ -963,19 +953,14 @@ reach = {
         catch (e)
         {}
         reach.online = false;
-        core.setOnline(false);    
+        $engine.setOnline(false);    
     },
 	resume: function(){
 		if(navigator.connection.type == Connection.NONE) reach.offLine();
 		else reach.onLine();
-		$delay(0,function(){
-			var logo = reach.getImageURL('logo.png');  
-            if (logo.substr(0,10) == "../images/")
-                logo = null;  
-		});
 	},
 	pause:function(){
-		core.store();//this should ensure that whatever is stored is up to date!
+		$engine.store();//this should ensure that whatever is stored is up to date!
 	},
     camera: function (onSuccess, onFail, options)
     {

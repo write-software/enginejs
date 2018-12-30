@@ -42,12 +42,13 @@ window._appName = "EngineJS";
     
 */
 ////////////////////////////////////////////////////////////////////////////
-window._core = {
+window._core = {    
     app:null,
     routers:{},
     components:{},
     models:{},
     constants:{},
+    agent:navigator.userAgent.toLowerCase(),
     log:function(x)
     {
         console.log(x);
@@ -127,7 +128,17 @@ window._core = {
     isRouter:function(name)
     {
         return this.routers[name] == null ? false : true;
-    }
+    },
+    isMobile : function() 
+    {
+        if (this.agent.indexOf("ipad") != -1) return true;
+        if (this.agent.indexOf("iphone") != -1) return true;
+        if (this.agent.indexOf("android") != -1) return true;
+        if (this.agent.indexOf("iemobile") != -1) return true;
+        if (this.agent.indexOf("blackberry") != -1) return true;
+        return false;
+    },
+    isStandAlone : function() { return window.navigator.standalone; }
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -320,10 +331,17 @@ if (!String.prototype.trim)
   };
 }
 
+if (typeof JSON.clone !== "function") {
+    JSON.clone = function(obj) {
+        return JSON.parse(JSON.stringify(obj));
+    };
+}
+
 //------------------------------------------------------------------------------
 // Macros
 
 $debug = function(x) { try { if (console) console.log(x);}catch(e){} };
+$log = function(x) { try { if (console) console.log(x);}catch(e){} };
 $delay = function(t,f,s) { return setTimeout(function(){ f(s); },t); };
 $ft = function(v) { if (v == "") return 0; if (v == null) return 0; return parseFloat(v); };
 $round = function(num,dec) { return Math.round(num*Math.pow(10,dec))/Math.pow(10,dec); };
@@ -644,6 +662,11 @@ var baseClass = Class.extend({
     clone:function(obj)
     {
         return $.extend({},obj);
+    },
+    ucwords:function(str)
+    {
+        return (str + '').replace(/^(.)|\s(.)/g, function ($1) {
+            return $1.toUpperCase();    });
     }
 });
 
@@ -673,7 +696,6 @@ var model = baseClass.extend({
         var _self = this;
         this.name = options.name || this.guid();
         this._data = data;
-        this.state = options.state || 0;  
         this.autoStore = options.autoStore || false;     
         if (typeof this._data == "function") 
         {
@@ -717,13 +739,18 @@ var model = baseClass.extend({
     {
         this._controller = controller;
     },
-    getState:function()
+    // Stubbs
+    ondatachange:function(prop)
     {
-        return this.state;
+
     },
-    changeState:function(value)
+    storeNow:function()
     {
-        this.state = value;
+        this.storeLocal(this.name,this._data);
+    },
+    notify:function()
+    {
+        this.onChange.notify( { data:this._data,prop:"",value:""});
     },
     getData:function()
     {
@@ -750,6 +777,13 @@ var model = baseClass.extend({
         while (p != -1)
         {
             let element = prop.substr(0, p);
+            if (obj[element] == null) 
+            {
+                prop = prop.substr(p + 1);
+                if (prop.indexOf(".") == -1) break;
+                this.log("json path error "+propname);
+                return;
+            }
             obj = obj[element];
             prop = prop.substr(p + 1);
             p = prop.indexOf(".");
@@ -757,9 +791,10 @@ var model = baseClass.extend({
         if (prop.substr(0,1) >= '0' && prop.substr(0,1) <= '9') prop = "_"+prop;
         var oldvalue = obj[prop];
         obj[prop] = value;
-        if (updateBinds) this.onChange.notify( { data:this._data,prop:propname,value:value});
+        if (updateBinds && oldvalue != value) this.onChange.notify( { data:this._data,prop:propname,value:value});
         if (this.autoStore)
-            this.storeLocal(this.name,obj)
+            this.storeLocal(this.name,this._data);
+        this.ondatachange(prop,value);
     },
     applyJSON:function(json,_exclude = "", updateBinds = true)
     {
@@ -792,6 +827,25 @@ var model = baseClass.extend({
         this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
         if (this.autoStore)
             this.storeLocal(this.name,this._data)
+        this.ondatachange(prop,value);
+    },
+    pushTop:function(prop, value)
+    {
+        let obj = this._data;
+        let p = prop.indexOf(".");
+        while (p != -1)
+        {
+            let element = prop.substr(0, p);
+            obj = obj[element];
+            prop = prop.substr(p + 1);
+            p = prop.indexOf(".");
+        }
+        if (!$.isArray(obj[prop])) return;
+        obj[prop].unshift(value);
+        this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
+        if (this.autoStore)
+            this.storeLocal(this.name,this._data)
+        this.ondatachange(prop,value);
     },
     pop:function(prop)
     {
@@ -809,6 +863,7 @@ var model = baseClass.extend({
         this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
         if (this.autoStore)
             this.storeLocal(this.name,this._data)
+        this.ondatachange(prop);
         return value;
     },
     getAt:function(prop,index)
@@ -841,6 +896,7 @@ var model = baseClass.extend({
         this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
         if (this.autoStore)
             this.storeLocal(this.name,this._data)
+        this.ondatachange(prop);
         return value;
     },
     insertAt:function(prop,index,value)
@@ -859,6 +915,7 @@ var model = baseClass.extend({
         this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
         if (this.autoStore)
             this.storeLocal(this.name,this._data)
+        this.ondatachange(prop,value,index);
     },
     asString:function()
     {
@@ -876,6 +933,56 @@ var model = baseClass.extend({
             }
         }
         return -1;    
+    },
+    lookup:function(_prop,_key,_value,_return)
+    {
+        var d = this._data[_prop];
+        if (d)
+        {
+            for (var i = 0;i < d.length;i++)
+            {
+                var e = d[i][_key];
+                if (e && e == _value) return d[i][_return];;
+            }
+        }
+        return -1;    
+    },
+    filter:function(_prop,fn)
+    {
+        var d = this._data[_prop];
+        if (d) return d.filter(fn);
+        return null
+    },
+    forEach:function(_prop,fn)
+    {
+        var d = this._data[_prop];
+        if (d) d.forEach(fn);
+    },
+    sort:function(_prop,_key1,_key2)
+    {
+        function SortBy(a, b){
+            var aV1 = a[_key1].toLowerCase();
+            var bV1 = b[_key1].toLowerCase(); 
+
+            if ((aV1 < bV1)) return -1;
+            if ((aV1 > bV1)) return 1;
+            if (_key2)
+            {
+                var aV2 = a[_key2].toLowerCase();
+                var bV2 = b[_key2].toLowerCase();                 
+                if ((aV2 < bV2)) return -1;
+                if ((aV2 > bV2)) return 1;
+            }
+            return 0;
+          }
+        var d = this._data[_prop];
+        if (d)
+        {
+            d.sort(SortBy);
+            this.onChange.notify( { data:this._data,prop:_prop,value:d});
+            if (this.autoStore)
+                this.storeLocal(this.name,this._data)
+        }
     }
 });
 
@@ -1138,7 +1245,11 @@ var view = baseClass.extend({
         
         if (!attr)
             return;
-            
+        if (typeof value == "undefined")
+        {
+            debugger;
+        }
+
         var p = attr.indexOf(":");
         if (p != -1)
         {
@@ -1786,6 +1897,37 @@ var engine = baseClass.extend({
         Handlebars.registerHelper( "enc", function( inputData ) {
             return new Handlebars.SafeString(inputData);
         } );
+        this.pgHeight = $(document).height();
+        this.pgWidth = $(document).width();
+    },
+    // Stubbs
+    setOnline:function()
+    {
+
+    },
+    ajax:function(config)
+    {
+        try
+        {
+            if (config.url == null) return;
+            if (config.dataType == null) config.dataType = 'json';
+            if (config.type == null) config.type = 'POST';
+            config.data = config.params;
+            if (config.error)
+            {
+                config.failed = config.error;
+                config.error = function(jqXHR, errText, err)
+                {
+                    config.failed(jqXHR, errText, err)
+                }
+            }
+            $.ajax(config);
+        }
+        catch (e)
+        {
+            alert("AJAX Error")
+            return null;
+        }
     },
     createModel:function(data,options)
     {
@@ -2918,13 +3060,13 @@ var router = Class.extend({
                 target.fire("afterNavigate",sHash);
                 try
                 {
-                    $.engine.input.activate();
-                    $.engine.dropdownMenu.activate();
-                    $.engine.select.activate();    
+                    $ui.input.activate();
+                    $ui.dropdownMenu.activate();
+                    $ui.select.activate();    
                 }
                 catch(e)
                 {
-
+                    $log(e.message)
                 }
                 return; 
             }
