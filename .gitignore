@@ -1,5 +1,6 @@
 design/
 distribution/
+production/
 .vscode/
 .gitignore
 distribution/app/app.js
