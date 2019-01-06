@@ -2090,7 +2090,7 @@ var engine = baseClass.extend({
         }
         catch(e)
         {
-            return "";
+            return null;
         }
     },
     getModelData:function(name)
@@ -2101,7 +2101,7 @@ var engine = baseClass.extend({
         }
         catch(e)
         {
-            return "";
+            return null;
         }
     },
     getComponent:function(name)
@@ -2112,7 +2112,7 @@ var engine = baseClass.extend({
         }
         catch(e)
         {
-            return "";
+            return null;
         }
     },
 	done: function (timeout)
@@ -2151,7 +2151,7 @@ var engine = baseClass.extend({
         }
         BootstrapDialog.show(config);    
     },
-    warning:function(msg)
+    warning:function(msg,timeout)
     {
         if (BootstrapDialog == null)
         {
@@ -2162,7 +2162,16 @@ var engine = baseClass.extend({
             type:BootstrapDialog.TYPE_WARNING,
             title:'WARNING:',
             message:msg, 
-            closable:true,         
+            closable:true,     
+            onshow: function(dialogRef)
+            {
+                if (typeof timeout == "number")
+                {
+                    setTimeout(function(){
+                        dialogRef.close();
+                    }, timeout);                    
+                }
+            },    
             buttons: [{
                     id: 'btn-ok',   
                     icon: 'glyphicon glyphicon-check',       
@@ -2207,7 +2216,7 @@ var engine = baseClass.extend({
                 }]
             });
     },
-    confirm:function(message,callback,title,size,buttons)
+    confirm:function(msg,callback,title,size)
     {
         if (BootstrapDialog == null)
         {
@@ -2217,9 +2226,39 @@ var engine = baseClass.extend({
         BootstrapDialog.confirm({
             size:size,
             title:title,
-            message:message,
+            message:msg,
             callback:callback
         });
+    },
+    yesno:function(msg,callback,title,size)
+    {
+        if (BootstrapDialog == null)
+        {
+            $debug(msg);
+            return;
+        }
+        BootstrapDialog.show({
+            type:BootstrapDialog.TYPE_PRIMARY,
+            title:title,
+            message:msg, 
+            buttons: [{
+                    id: 'btn-yes',   
+                    label: 'YES',
+                    cssClass: 'btn-primary',
+                    action: function(dialogRef){    
+                        dialogRef.close();
+                        callback(true);
+                    }
+                },{
+                    id: 'btn-no',   
+                    label: 'NO',
+                    cssClass: 'btn-primary',
+                    action: function(dialogRef){    
+                        dialogRef.close();
+                        callback(false);
+                    }
+                }]
+            });
     },
     prompt:function(message,callback,title,size,inputType,buttons)
     {

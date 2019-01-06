@@ -63,6 +63,28 @@ var select = component.extend({
                     sSelected = sSelected.value;
                 }
                 try{
+                    if (_self.dataUpdate)
+                    {
+                        // model:property
+                        var p = _self.dataUpdate.indexOf(":");   
+                        if (p != -1)
+                        {
+                            var sModel = _self.dataUpdate.substr(0,p);
+                            var sProp = _self.dataUpdate.substr(p+1);
+                            var m = $engine.getModel(sModel);
+                            if (m)
+                            {
+                                try
+                                {
+                                    m.set(sProp,sSelected);    
+                                }
+                                catch(e)
+                                {
+                                    _self.log(e.message);
+                                }
+                            }
+                        }
+                    }
                     _self.onselected(sSelected,clickedIndex, ev);
                 }
                 catch(e)
