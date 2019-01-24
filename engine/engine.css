@@ -41,6 +41,13 @@ h3 {
     min-height:100vh;
 }
 
+.en-inactive {
+    display:none;
+}
+
+.en-active {
+    display:block;
+}
 
 input:focus,
 select:focus,
@@ -67,6 +74,14 @@ button:focus {
 .bold {
     font-weight:bold;
 }
+
+.relative {
+    position: relative; 
+ }
+ 
+ .absolute {
+    position: absolute; 
+ }
 
 .en-list {
     overflow-y: auto;

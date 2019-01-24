@@ -23,8 +23,19 @@ var dataView = component.extend({
     setSelected:function(idx)
     {
         $(this.getContainer()).find(".card").removeClass("dataview-select");
-        $(this.getContainer()).find('[en-index="' + idx + '"]').addClass("dataview-select");
+        $(this.getContainer()).find('[en-index="' + idx + '"]').addClass("dataview-select");   
         this._model.set("selected",idx);
+
+        try
+        {
+            var top = $(this.getContainer()).scrollTop();
+            var position = $(this.getContainer()).find('[en-index="' + idx + '"]').position();
+            $(this.getContainer()).slimScroll({ scrollTo: (top+position.top)+'px' });    
+        }
+        catch(e)
+        {
+
+        }
     }
 });    
 

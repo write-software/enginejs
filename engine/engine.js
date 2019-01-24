@@ -729,7 +729,7 @@ var model = baseClass.extend({
         {
             var d = this.getLocal(this.name,this._data)
             if (d)
-                this._data = d;
+                this._data = $.extend(this._data,d);
             else
                 this.storeLocal(this.name,this._data)
         }
@@ -755,6 +755,14 @@ var model = baseClass.extend({
     getData:function()
     {
         return this._data;
+    },
+    setData:function(data,updateBinds = true)
+    {
+        this._data = data;
+        if (updateBinds) this.onChange.notify( { data:this._data,prop:"data",value:data});
+        if (this.autoStore)
+            this.storeLocal(this.name,this._data);
+        this.ondatachange("data",data);
     },
     get:function(prop)
     {
@@ -1618,11 +1626,16 @@ component = baseClass.extend({
     {
         this._super();
         let _self = this;
+
         this._model = _model;
         this._view = _view;
         this.selector = '';
         this.options = options;
         this._id = options.id || this.guid();
+
+        if (this._model == null)
+            this._model = new model({ }, {  name:this._id });            
+
         // attach this component to the main app so it available globally
         if ( _core ) 
             _core.attachComponent(this._id,this);
@@ -1635,7 +1648,13 @@ component = baseClass.extend({
             (sender, arg) =>
             {
                 _self._view._binds(arg.data,arg.prop,arg.value);
-                $('select:not(.ms)').selectpicker('refresh');
+                try
+                {
+                    $('select:not(.ms)').selectpicker('refresh');
+                }
+                catch(e)
+                {
+                }
                 if (_self._ondatachange) 
                 {
                     _self._ondatachange.call(_self,arg.prop,arg.value,arg.data);
@@ -2049,7 +2068,10 @@ var engine = baseClass.extend({
         return new Promise((resolve, reject) => {
             try
             {
-                $ui.uiReady();
+                if (typeof $ui != "undefined")
+                {        
+                    $ui.uiReady();
+                }
                 resolve()
             }
             catch(e)
@@ -2256,6 +2278,33 @@ var engine = baseClass.extend({
                     action: function(dialogRef){    
                         dialogRef.close();
                         callback(false);
+                    }
+                }]
+            });
+    },
+    dialog:function(title,message,size)
+    {
+        if (BootstrapDialog == null)
+        {
+            $debug(msg);
+            return;
+        }
+        BootstrapDialog.show({
+            size:size,
+            title:title,
+            message:message,
+            buttons: [{
+                    id: 'btn-ok',   
+                    icon: 'glyphicon glyphicon-check',       
+                    label: 'Cancel',
+                    cssClass: 'btn-primary',
+                    data: {
+                        js: 'btn-confirm',
+                        'user-id': '3'
+                    },
+                    autospin: false,
+                    action: function(dialogRef){    
+                        dialogRef.close();
                     }
                 }]
             });
@@ -2545,10 +2594,11 @@ var http = baseClass.extend({
         this._model = model;
         this._property = property;
     },
-    post:function(params,type = "json")
+    post:function(params,url,type = "json")
     {
         var _self = this;
         _self.params = params;
+        if (url != null) _self.url = url
         return new Promise((resolve, reject) => {
             try
             {
@@ -2581,10 +2631,11 @@ var http = baseClass.extend({
             }    
         });
     },
-    get:function(params,type = "json")
+    get:function(params,url,type = "json")
     {
         var _self = this;
         _self.params = params;
+        if (url != null) _self.url = url
         return new Promise((resolve, reject) => {
             try
             {
@@ -3052,12 +3103,13 @@ var store = baseClass.extend({
 */
 ////////////////////////////////////////////////////////////////////////////
 var router = Class.extend({
-    init:function(name, forceNavigate) {
+    init:function(name, options = {}, forceNavigate) {
         if (name == null) return;
         var _self = this; 
         this.name = name || this.guid();
         this.forceNavigate = forceNavigate;
         this.routes = [];
+        if (options && $.isArray(options.routes)) this.routes = options.routes;
         $(window).on('hashchange', function(e)
         {
              _self.navigate(window.location.hash);
@@ -3076,7 +3128,7 @@ var router = Class.extend({
         sHash = sHash.replace("#","/");
         for (var p in _self.routes)
         {
-            if(_self.routes[p].hash == sHash || (sHash == "" && _self.routes[p].hash == "/") )
+            if(_self.routes[p].path == sHash || (sHash == "" && _self.routes[p].path == "/") )
             {
                 var target = _self.routes[p].component;
                 if (target._view._element == null) 
@@ -3097,11 +3149,15 @@ var router = Class.extend({
                 $(target._view._element).attr("en-view","active");
                 target.refreshData();
                 target.fire("afterNavigate",sHash);
+                _self.afterNavigate.call(_self,sHash);
                 try
                 {
-                    $ui.input.activate();
-                    $ui.dropdownMenu.activate();
-                    $ui.select.activate();    
+                    if (typeof $ui != "undefined")
+                    {        
+                        $ui.input.activate();
+                        $ui.dropdownMenu.activate();
+                        $ui.select.activate();    
+                    }
                 }
                 catch(e)
                 {
@@ -3121,6 +3177,10 @@ var router = Class.extend({
     {
         return true;
     },
+    afterNavigate:function(sHash)
+    {
+
+    },
     navigateTo:function(sHash)
     {
         var _self = this; 
@@ -3132,11 +3192,11 @@ var router = Class.extend({
                 setTimeout(function()
                 {
                     if (window.location.hash == "" && sHash == "#")
-                    _self.navigate(sHash)
+                        _self.navigate(sHash)
                     else if (window.location.hash != sHash)
                         window.location = sHash;
                     else
-                    _self.navigate(sHash)
+                        _self.navigate(sHash)
                     resolve();
                 },100);
             }
@@ -3189,7 +3249,7 @@ var router = Class.extend({
         return new Promise((resolve, reject) => {
             try
             {
-                this.routes.push({ hash:sHash, component:_component })          
+                this.routes.push({ path:sHash, component:_component })          
                 resolve();
             }
             catch(e)
@@ -3204,7 +3264,7 @@ var router = Class.extend({
         sHash = sHash.replace("#","/");
         for (var p in _self.routes)
         {
-            if(_self.routes[p].hash == sHash || (sHash == "" && _self.routes[p].hash == "/") )
+            if(_self.routes[p].path == sHash || (sHash == "" && _self.routes[p].path == "/") )
                 return true;
         }
         return false

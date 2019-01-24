@@ -104,8 +104,11 @@ $ui.leftSideBar = {
         });
 
         //Set Waves
-        Waves.attach('.menu .list a', ['waves-block']);
-        Waves.init();
+        if (typeof Waves != "undefined")
+        {
+            Waves.attach('.menu .list a', ['waves-block']);
+            Waves.init();    
+        }
     },
     setMenuHeight: function (isFirstTime) {
         if (typeof $.fn.slimScroll != 'undefined') {
@@ -369,8 +372,11 @@ $ui.dropdownMenu = {
         });
 
         //Set Waves
-        Waves.attach('.dropdown-menu li a', ['waves-block']);
-        Waves.init();
+        if (typeof Waves != "undefined")
+        {
+            Waves.attach('.dropdown-menu li a', ['waves-block']);
+            Waves.init();
+        }
     },
     dropdownEffect: function (target) {
         var effectIn = $ui.options.dropdownMenu.effectIn, effectOut = $ui.options.dropdownMenu.effectOut;
