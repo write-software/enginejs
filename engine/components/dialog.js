@@ -68,7 +68,8 @@ var dialog = component.extend({
     		$delay(100, function ()
     		{
                _self.refreshData();
-                $(el).find('input:enabled:visible:first').focus();
+               $ui.input.activate();
+               $(el).find('input:enabled:visible:first').focus();
     		});
         });  
     },

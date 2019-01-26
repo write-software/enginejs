@@ -1118,18 +1118,19 @@ var view = baseClass.extend({
                 let entry = value[index];
                 if (typeof entry == "object")
                 {
+                    var exp = /{\s*([^}]+)\s*}/g
+                    var placeholders = template.match(exp);
                     var line = template;
-                    for (var key in entry) 
+                    for (let key in placeholders) 
                     {
-                        var data = entry[key];
-                        if (typeof data == "function")
+                        if (placeholders.hasOwnProperty(key)) 
                         {
-                            data = data.call(_self,entry,index,key);
+                            const placeholder = placeholders[key];
+                            let marker = placeholder.replace("this", _self.id).replace("{", "").replace("}", "").trim();
+                            if (marker == "{id}") continue;
+                            var data = jsonPath(entry,marker);
+                            line = line.replaceAll(placeholder,data[0]);   
                         }
-                        if (typeof data == "string")
-                            line = line.replaceAll("{" + key + "}",data);                                    
-                        else
-                             line = line.replaceAll("{" + key + "}","");                                    
                     }
                     line = line.replaceAll("{id}",_self.id + "_" + index);   
                     line = line.replaceAll("{index}",index);   
@@ -2588,28 +2589,29 @@ var engine = baseClass.extend({
 */
 ////////////////////////////////////////////////////////////////////////////
 var http = baseClass.extend({
-    init:function(url,model,property) {
+    init:function(url,params = {},model,property) {
         this._super();
-        this.url = url || "";
+        this._url = url || "";
         this._model = model;
         this._property = property;
+        this._params = params;
     },
     post:function(params,url,type = "json")
     {
         var _self = this;
-        _self.params = params;
-        if (url != null) _self.url = url
+        var data = $.extend({},this._params,params);
+        if (url != null) _self._url = url
         return new Promise((resolve, reject) => {
             try
             {
-                if (this.url == null) 
-                    reject("no url set");
+                if (this._url == null) 
+                    reject("No url set");
                 else
                 {
-                    let props = { url:this.url };
+                    let props = { url:this._url };
                     props.dataType = type;
                     props.type = 'POST';
-                    props.data = params;
+                    props.data = data;
                     props.error = function(jqXHR, errText, err)
                     {
                         reject(jqXHR, errText, err);
@@ -2634,19 +2636,19 @@ var http = baseClass.extend({
     get:function(params,url,type = "json")
     {
         var _self = this;
-        _self.params = params;
-        if (url != null) _self.url = url
+        var data = $.extend({},this._params,params);
+        if (url != null) _self._url = url
         return new Promise((resolve, reject) => {
             try
             {
-                if (this.url == null) 
+                if (this._url == null) 
                     reject("no url set");
                 else
                 {
-                    let props = { url:this.url };
+                    let props = { url:this._url };
                     props.dataType = type;
                     props.type = 'GET';
-                    props.data = params;
+                    props.data = data;
                     props.error = function(jqXHR, errText, err)
                     {
                         reject(jqXHR, errText, err);
@@ -2672,6 +2674,10 @@ var http = baseClass.extend({
     {
         this._model = model;
         this._property = property;
+    },
+    setParams:function(params)
+    {
+        return  this._params = params;
     },
     getModel:function()
     {
