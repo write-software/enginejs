@@ -15,19 +15,14 @@
  * REPRESENTATION OR WARRANTY OF ANY KIND CONCERNING THE MERCHANTABILITY
  * OF THIS SOFTWARE OR ITS FITNESS FOR ANY PARTICULAR PURPOSE.
  *
- * GITHUB: https://github.com/write-software/enginejs
- * 
  ***************************************************************/
  ////////////////////////////////////////////////////////////////////////////
 /*
     engine.js
 
-    Code for EngineJS, this class orientated framework is based on a MVC architecture.
+    Code for EngineJS, this class based framework is based on MVC a architecture.
 
-    version:    1.0.0 beta
-
-
-    Please note that any function those name begins with '_' is for interal use only
+    version:    1.0.0
    
 */
 ////////////////////////////////////////////////////////////////////////////
@@ -402,8 +397,6 @@ var appEvents = Class.extend({
         this.events = [];
         this.halt = false;
     },
-    //------------------------------------------------------------------------------
-    // Register the event and callback function to be intercepted
     register:function(sEvent,fn)
     {
         if (this.events[sEvent] == null)
@@ -413,15 +406,11 @@ var appEvents = Class.extend({
         this.events[sEvent].push(fn);
         return this.events[sEvent].length-1;
     },
-    //------------------------------------------------------------------------------
-    // Unregister the event using the index id returned when calling the register function
     unregister:function(sEvent,idx)
     {
         if (idx == null) return;
         this.events[sEvent].splice(idx,1);
     },
-    //------------------------------------------------------------------------------
-    // Used stop any further interception
     stop:function()
     {
         this.halt = true;
@@ -430,8 +419,6 @@ var appEvents = Class.extend({
     {
         return this.halt;   
     },
-    //------------------------------------------------------------------------------
-    // Fire the event from a part of your app
     fire:function(sEvent, data , callback)
     {
         var me = this;
@@ -976,8 +963,12 @@ var model = baseClass.extend({
         {
             for (var i = 0;i < d.length;i++)
             {
-                var e = d[i][_key];
-                if (e && e == _value) return i;
+                var e = d[i];
+                if (_key.indexOf(".") != -1)
+                    var v = jsonPath(e, _key);
+                else    
+                    var v = e[_key];
+                if (v && v == _value) return i;
             }
         }
         return -1;    
@@ -2107,9 +2098,6 @@ var engine = baseClass.extend({
             }    
         });                    
     },
-    //------------------------------------------------------------------------------
-    // This funtion is called upon loading of the app to allow any 
-    // vendor specify operations to be ran
     uiReady:function() 
     {
         // Should really only call this once
@@ -2185,9 +2173,6 @@ var engine = baseClass.extend({
             return null;
         }
     },
-    //------------------------------------------------------------------------------
-    // Various convenient funtions to aid app development
-    //
 	done: function (timeout)
 	{
 		if (timeout == null) timeout = 1500;
@@ -2779,7 +2764,7 @@ var http = baseClass.extend({
 /*
     DATAMAP class
 
-    A class for mapping data properties between JSON Objects, works with Store class.
+    A class is for mapping data properties between JSON Objects, works with Store class.
     
     This provides two-way movement of data.
 */
@@ -2864,8 +2849,8 @@ var dataMap = baseClass.extend({
     
     Parameters 
         options : {
-            type:'simple' or 'db',  // Works like a model but much simpler
-            data: [],               // Used with simple type
+            type:'simple',  // Works like a model but much simpler
+            data: [],       // Used with simple type
             methods:{
             }
         }
@@ -3363,5 +3348,5 @@ var router = Class.extend({
     }
 })
 
-// Internal engine object
+// Internal engine object/
 var $engine = new engine();
