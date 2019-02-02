@@ -15,14 +15,19 @@
  * REPRESENTATION OR WARRANTY OF ANY KIND CONCERNING THE MERCHANTABILITY
  * OF THIS SOFTWARE OR ITS FITNESS FOR ANY PARTICULAR PURPOSE.
  *
+ * GITHUB: https://github.com/write-software/enginejs
+ * 
  ***************************************************************/
  ////////////////////////////////////////////////////////////////////////////
 /*
     engine.js
 
-    Code for EngineJS, this class based framework is based on MVC a architecture.
+    Code for EngineJS, this class orientated framework is based on a MVC architecture.
 
-    version:    1.0.0
+    version:    1.0.0 beta
+
+
+    Please note that any function those name begins with '_' is for interal use only
    
 */
 ////////////////////////////////////////////////////////////////////////////
@@ -397,6 +402,8 @@ var appEvents = Class.extend({
         this.events = [];
         this.halt = false;
     },
+    //------------------------------------------------------------------------------
+    // Register the event and callback function to be intercepted
     register:function(sEvent,fn)
     {
         if (this.events[sEvent] == null)
@@ -406,11 +413,15 @@ var appEvents = Class.extend({
         this.events[sEvent].push(fn);
         return this.events[sEvent].length-1;
     },
+    //------------------------------------------------------------------------------
+    // Unregister the event using the index id returned when calling the register function
     unregister:function(sEvent,idx)
     {
         if (idx == null) return;
         this.events[sEvent].splice(idx,1);
     },
+    //------------------------------------------------------------------------------
+    // Used stop any further interception
     stop:function()
     {
         this.halt = true;
@@ -419,6 +430,8 @@ var appEvents = Class.extend({
     {
         return this.halt;   
     },
+    //------------------------------------------------------------------------------
+    // Fire the event from a part of your app
     fire:function(sEvent, data , callback)
     {
         var me = this;
@@ -746,18 +759,22 @@ var model = baseClass.extend({
     },
     storeNow:function()
     {
+        // Store the model data in local storage
         this.storeLocal(this.name,this._data);
     },
-    notify:function()
+    notify:function(_prop = "")
     {
-        this.onChange.notify( { data:this._data,prop:"",value:""});
+        // Send notification to all components that the model has changed
+        this.onChange.notify( { data:this._data,prop:_prop,value:""});
     },
     getData:function()
     {
+        // get the whole model data
         return this._data;
     },
     setData:function(data,updateBinds = true)
     {
+        // set the whole model data
         this._data = data;
         if (updateBinds) this.onChange.notify( { data:this._data,prop:"data",value:data});
         if (this.autoStore)
@@ -788,7 +805,12 @@ var model = baseClass.extend({
             if (obj[element] == null) 
             {
                 prop = prop.substr(p + 1);
-                if (prop.indexOf(".") == -1) break;
+                if (prop.indexOf(".") == -1) 
+                {
+                    obj[element] = {};
+                    obj = obj[element];
+                    break;
+                }
                 this.log("json path error "+propname);
                 return;
             }
@@ -887,6 +909,24 @@ var model = baseClass.extend({
         }
         if (!$.isArray(obj[prop])) return null;
         return obj[prop][index];
+    },
+    setAt:function(prop,index,value)
+    {
+        let obj = this._data;
+        let p = prop.indexOf(".");
+        while (p != -1)
+        {
+            let element = prop.substr(0, p);
+            obj = obj[element];
+            prop = prop.substr(p + 1);
+            p = prop.indexOf(".");
+        }
+        if (!$.isArray(obj[prop])) return null;
+        obj[prop][index] = value;
+        this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
+        if (this.autoStore)
+            this.storeLocal(this.name,this._data)
+        this.ondatachange(prop);
     },
     removeAt:function(prop,index)
     {
@@ -1257,6 +1297,10 @@ var view = baseClass.extend({
         if (typeof value == "undefined")
         {
             debugger;
+        }
+        if (typeof value == "string" && el.tagName == "DIV")
+        {
+            value = value.replaceAll("\n","<br/>");
         }
 
         var p = attr.indexOf(":");
@@ -1717,10 +1761,10 @@ component = baseClass.extend({
                     if (name == _self._id) return;
                     let comp = _core.components[name];
                     var el = $(_self._view._element).find(name); 
-                    if(el.length != 0)
+                    $(el).each(function(index)
                     {
-                        comp.render(el,false,false);   
-                    }
+                        comp.render(el[index],false,false);   
+                    });
                 });
                 resolve();
             }
@@ -2063,6 +2107,9 @@ var engine = baseClass.extend({
             }    
         });                    
     },
+    //------------------------------------------------------------------------------
+    // This funtion is called upon loading of the app to allow any 
+    // vendor specify operations to be ran
     uiReady:function() 
     {
         // Should really only call this once
@@ -2138,6 +2185,9 @@ var engine = baseClass.extend({
             return null;
         }
     },
+    //------------------------------------------------------------------------------
+    // Various convenient funtions to aid app development
+    //
 	done: function (timeout)
 	{
 		if (timeout == null) timeout = 1500;
@@ -2670,6 +2720,42 @@ var http = baseClass.extend({
             }    
         });
     },
+    delete:function(params,url,type = "json")
+    {
+        var _self = this;
+        var data = $.extend({},this._params,params);
+        if (url != null) _self._url = url
+        return new Promise((resolve, reject) => {
+            try
+            {
+                if (this._url == null) 
+                    reject("no url set");
+                else
+                {
+                    let props = { url:this._url +"?" + $.param(data) };
+                    props.dataType = type;
+                    props.type = 'DELETE';
+                    props.error = function(jqXHR, errText, err)
+                    {
+                        reject(jqXHR, errText, err);
+                    }
+                    props.success = function(resp)
+                    {
+                        if (_self._model && _self._property)
+                        {
+                            _self._model.set(_self._property,JSON.parse(resp.result));
+                        }
+                        resolve(resp);
+                    }
+                    $.ajax(props);
+                }
+            }
+            catch(e)
+            {
+                reject(e); 
+            }    
+        });
+    },
     attachModel:function(model,property)
     {
         this._model = model;
@@ -2693,7 +2779,7 @@ var http = baseClass.extend({
 /*
     DATAMAP class
 
-    A class is for mapping data properties between JSON Objects, works with Store class.
+    A class for mapping data properties between JSON Objects, works with Store class.
     
     This provides two-way movement of data.
 */
@@ -2778,8 +2864,8 @@ var dataMap = baseClass.extend({
     
     Parameters 
         options : {
-            type:'simple',  // Works like a model but much simpler
-            data: [],       // Used with simple type
+            type:'simple' or 'db',  // Works like a model but much simpler
+            data: [],               // Used with simple type
             methods:{
             }
         }
@@ -3277,5 +3363,5 @@ var router = Class.extend({
     }
 })
 
-// Internal engine object/
+// Internal engine object
 var $engine = new engine();

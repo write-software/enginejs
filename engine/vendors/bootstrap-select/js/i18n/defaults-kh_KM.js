@@ -24,19 +24,19 @@
 
 (function ($) {
   $.fn.selectpicker.defaults = {
-    noneSelectedText: 'Bitte wählen...',
-    noneResultsText: 'Keine Ergebnisse für {0}',
+    noneSelectedText: 'មិនមានអ្វីបានជ្រើសរើស',
+    noneResultsText: 'មិនមានលទ្ធផល {0}',
     countSelectedText: function (numSelected, numTotal) {
-      return (numSelected == 1) ? "{0} Element ausgewählt" : "{0} Elemente ausgewählt";
+      return (numSelected == 1) ? "{0} ធាតុដែលបានជ្រើស" : "{0} ធាតុដែលបានជ្រើស";
     },
     maxOptionsText: function (numAll, numGroup) {
       return [
-        (numAll == 1) ? 'Limit erreicht ({n} Element max.)' : 'Limit erreicht ({n} Elemente max.)',
-        (numGroup == 1) ? 'Gruppen-Limit erreicht ({n} Element max.)' : 'Gruppen-Limit erreicht ({n} Elemente max.)'
+        (numAll == 1) ? 'ឈានដល់ដែនកំណត់ ( {n} ធាតុអតិបរមា)' : 'អតិបរមាឈានដល់ដែនកំណត់ ( {n} ធាតុ)',
+        (numGroup == 1) ? 'ដែនកំណត់ក្រុមឈានដល់ ( {n} អតិបរមាធាតុ)' : 'អតិបរមាក្រុមឈានដល់ដែនកំណត់ ( {n} ធាតុ)'
       ];
     },
-    selectAllText: 'Alles auswählen',
-    deselectAllText: 'Nichts auswählen',
+    selectAllText: 'ជ្រើស​យក​ទាំងអស់',
+    deselectAllText: 'មិនជ្រើស​យក​ទាំងអស',
     multipleSeparator: ', '
   };
 })(jQuery);

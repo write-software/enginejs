@@ -24,19 +24,19 @@
 
 (function ($) {
   $.fn.selectpicker.defaults = {
-    noneSelectedText: 'Bitte wählen...',
-    noneResultsText: 'Keine Ergebnisse für {0}',
+    noneSelectedText: 'Chưa chọn',
+    noneResultsText: 'Không có kết quả cho {0}',
     countSelectedText: function (numSelected, numTotal) {
-      return (numSelected == 1) ? "{0} Element ausgewählt" : "{0} Elemente ausgewählt";
+      return "{0} mục đã chọn";
     },
     maxOptionsText: function (numAll, numGroup) {
       return [
-        (numAll == 1) ? 'Limit erreicht ({n} Element max.)' : 'Limit erreicht ({n} Elemente max.)',
-        (numGroup == 1) ? 'Gruppen-Limit erreicht ({n} Element max.)' : 'Gruppen-Limit erreicht ({n} Elemente max.)'
+        'Không thể chọn (giới hạn {n} mục)',
+        'Không thể chọn (giới hạn {n} mục)'
       ];
     },
-    selectAllText: 'Alles auswählen',
-    deselectAllText: 'Nichts auswählen',
+    selectAllText: 'Chọn tất cả',
+    deselectAllText: 'Bỏ chọn',
     multipleSeparator: ', '
   };
 })(jQuery);

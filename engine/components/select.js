@@ -25,20 +25,27 @@ var select = component.extend({
             <template en-template="${options.dataBind}">
                 <option id="{id}" value="{${options.optionValue}}">{${options.optionText}}</option>
             </template>
-            <select id="${options.id}-list" class="form-control" ${options.multiple} data-type="component" en-bind="${options.dataBind}" en-update="${options.dataUpdate}">
+            <select id="${options.id}-list" class="selectpicker form-control" ${options.multiple} data-type="component" en-bind="${options.dataBind}" en-update="${options.dataUpdate}">
             </select>
         </div>`;
         let _view = new view(html);
         _options.id = options.id;        
         _options.methods = options.methods;
         this._super(_model,_view,_options);
+        this.optionText = options.optionText;
+        this.optionValue = options.optionValue;
         this.dataBind = options.dataBind;
         this.dataUpdate = options.dataUpdate;
+        this.liveSearch = options.liveSearch;
         this.multiple = options.multiple;
     },
     onrender:function(element)
     {
         let _self = this;
+        if (this.liveSearch)
+        {
+            $(_self._view._element).find('select:not(.ms)').selectpicker( { liveSearch:true } );
+        }
         $(element).on("changed.bs.select",
             function(ev, clickedIndex, newValue, oldValue) 
             {
@@ -118,7 +125,18 @@ var select = component.extend({
     {
         if (_value == null) return;
         var _self = this;
-        var data = this._model.getData()[this.dataBind];
+        var m = this.getModel();
+        if (m.search(this.dataBind,this.optionValue,_value) == -1) 
+        {
+            if (m.search(this.dataBind,this.optionText,_value) == -1) 
+            {
+                debugger;
+                $(this._view._element).find('select:not(.ms)').val('');
+                $(this._view._element).find('select:not(.ms)').selectpicker("refresh");
+                return;
+            }
+        }
+        var data = m.getData()[this.dataBind];
         if (_self.multiple)
         {
             var index = 0;
@@ -126,28 +144,37 @@ var select = component.extend({
             $.each(data,function(key,value)
             {
                 var v = data[key];
-                if (v.value == null) v.value = v.text;
-                if ((_value+",").indexOf(v.value+",") != -1)
+                if (v[this.optionValue] == null) v[this.optionValue] = v[this.optionText];
+                if ((_value+",").indexOf(v[this.optionValue] +",") != -1)
                 {
-                    if (_value == "" && v.value == "")
+                    if (_value == "" && v[this.optionValue] == "")
                     {
                         _self.selected.push(_value);
                     }
-                    else if (v.value != "") 
+                    else if (v[this.optionValue]  != "") 
                     {
-                        _self.selected.push(v.value);
+                        _self.selected.push(v[this.optionValue] );
                     }
                 }
                 index++;
             });
             $(_self._view._element).find('select:not(.ms)').selectpicker('val',_self.selected);
         }
-        else
+        else if (_value)
             $(_self._view._element).find('select:not(.ms)').selectpicker('val',_value);
+        else
+        {
+            $(this._view._element).find('select:not(.ms)').val('default');
+            $(this._view._element).find('select:not(.ms)').selectpicker("refresh");
+        }
         $(_self._view._element).find('select:not(.ms)').selectpicker('refresh');
     },
     reset:function()
     {
         $(this._view._element).find('select:not(.ms)').selectpicker('deselectAll');
+    },
+    refresh:function()
+    {
+        $(_self._view._element).find('select:not(.ms)').selectpicker('refresh');
     }
 });    

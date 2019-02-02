@@ -54,6 +54,10 @@ var table = component.extend({
         var _self = this;
         return _self.table.rows('.en_selected').data();
     },
+    refresh:function(_selector)
+    {
+        this.table.rows( _selector ).invalidate();
+    },
     clearSelection:function()
     {
         var _self = this;

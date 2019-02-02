@@ -334,7 +334,10 @@ $ui.input = {
 */
 $ui.select = {
     activate: function () {
-        if ($.fn.selectpicker) { $('select:not(.ms)').selectpicker(); }
+        if ($.fn.selectpicker)
+        {
+            $.fn.selectpicker.Constructor.BootstrapVersion = '3'; 
+        }
     }
 };
 //==========================================================================================================================

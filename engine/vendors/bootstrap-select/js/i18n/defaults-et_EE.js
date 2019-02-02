@@ -24,19 +24,19 @@
 
 (function ($) {
   $.fn.selectpicker.defaults = {
-    noneSelectedText: 'Bitte wählen...',
-    noneResultsText: 'Keine Ergebnisse für {0}',
+    noneSelectedText: 'Valikut pole tehtud',
+    noneResultsText: 'Otsingule {0} ei ole vasteid',
     countSelectedText: function (numSelected, numTotal) {
-      return (numSelected == 1) ? "{0} Element ausgewählt" : "{0} Elemente ausgewählt";
+      return (numSelected == 1) ? "{0} item selected" : "{0} items selected";
     },
     maxOptionsText: function (numAll, numGroup) {
       return [
-        (numAll == 1) ? 'Limit erreicht ({n} Element max.)' : 'Limit erreicht ({n} Elemente max.)',
-        (numGroup == 1) ? 'Gruppen-Limit erreicht ({n} Element max.)' : 'Gruppen-Limit erreicht ({n} Elemente max.)'
+        'Limiit on {n} max',
+        'Globaalne limiit on {n} max'
       ];
     },
-    selectAllText: 'Alles auswählen',
-    deselectAllText: 'Nichts auswählen',
+    selectAllText: 'Vali kõik',
+    deselectAllText: 'Tühista kõik',
     multipleSeparator: ', '
   };
 })(jQuery);

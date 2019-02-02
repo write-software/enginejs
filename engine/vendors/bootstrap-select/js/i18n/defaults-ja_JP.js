@@ -24,19 +24,12 @@
 
 (function ($) {
   $.fn.selectpicker.defaults = {
-    noneSelectedText: 'Bitte wählen...',
-    noneResultsText: 'Keine Ergebnisse für {0}',
-    countSelectedText: function (numSelected, numTotal) {
-      return (numSelected == 1) ? "{0} Element ausgewählt" : "{0} Elemente ausgewählt";
-    },
-    maxOptionsText: function (numAll, numGroup) {
-      return [
-        (numAll == 1) ? 'Limit erreicht ({n} Element max.)' : 'Limit erreicht ({n} Elemente max.)',
-        (numGroup == 1) ? 'Gruppen-Limit erreicht ({n} Element max.)' : 'Gruppen-Limit erreicht ({n} Elemente max.)'
-      ];
-    },
-    selectAllText: 'Alles auswählen',
-    deselectAllText: 'Nichts auswählen',
+    noneSelectedText: '何もが選択した',
+    noneResultsText: '\'{0}\'が結果を返さない',
+    countSelectedText: '{0}/{1}が選択した',
+    maxOptionsText: ['限界は達した({n}{var}最大)', '限界をグループは達した({n}{var}最大)', ['アイテム', 'アイテム']],
+    selectAllText: '全部を選択する',
+    deselectAllText: '何も選択しない',
     multipleSeparator: ', '
   };
 })(jQuery);
