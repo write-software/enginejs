@@ -126,14 +126,17 @@ var select = component.extend({
         var _self = this;
         var m = this.getModel();
         var clickedIndex = -1;
-        if ((clickedIndex = m.search(this.dataBind,this.optionValue,_value)) == -1) 
+        if (!_self.multiple)
         {
-            if ((clickedIndex = m.search(this.dataBind,this.optionText,_value)) == -1) 
+            if ((clickedIndex = m.search(this.dataBind,this.optionValue,_value)) == -1) 
             {
-                $(this._view._element).find('select:not(.ms)').val('');
-                $(this._view._element).find('select:not(.ms)').selectpicker("refresh");
-                return;
-            }
+                if ((clickedIndex = m.search(this.dataBind,this.optionText,_value)) == -1) 
+                {
+                    $(this._view._element).find('select:not(.ms)').val('');
+                    $(this._view._element).find('select:not(.ms)').selectpicker("refresh");
+                    return;
+                }
+            }    
         }
         var data = m.getData()[this.dataBind];
         if (_self.multiple)
@@ -143,16 +146,16 @@ var select = component.extend({
             $.each(data,function(key,value)
             {
                 var v = data[key];
-                if (v[this.optionValue] == null) v[this.optionValue] = v[this.optionText];
-                if ((_value+",").indexOf(v[this.optionValue] +",") != -1)
+                if (v[_self.optionValue] == null) v[_self.optionValue] = v[_self.optionText];
+                if ((_value+",").indexOf(v[_self.optionValue] +",") != -1)
                 {
-                    if (_value == "" && v[this.optionValue] == "")
+                    if (_value == "" && v[_self.optionValue] == "")
                     {
                         _self.selected.push(_value);
                     }
-                    else if (v[this.optionValue]  != "") 
+                    else if (v[_self.optionValue]  != "") 
                     {
-                        _self.selected.push(v[this.optionValue] );
+                        _self.selected.push(v[_self.optionValue] );
                     }
                 }
                 index++;
