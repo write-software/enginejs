@@ -553,5 +553,26 @@ tr.shown td.details-control {
     display:inline-block !important;
 }
 
+/* Customise scrollbar */
 
+::-webkit-scrollbar {
+	width: 8px;
+}
+::-webkit-scrollbar-button {
+	width: 8px;
+	height:8px;
+}
+::-webkit-scrollbar-track {
+	background:#b0d6e9;
+	border: thin solid #b0d6e9;
+	box-shadow1: 0px 0px 3px #333 inset;
+	border-radius:2px;
+}
+::-webkit-scrollbar-thumb {
+	background:#00a8ff;
+	border-radius:3px;
+}
+::-webkit-scrollbar-thumb:hover {
+	background:rgb(255,102,51);
+}	
 

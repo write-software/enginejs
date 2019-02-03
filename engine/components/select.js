@@ -11,9 +11,12 @@ var select = component.extend({
         options.dataBind = options.dataBind || "data";
         options.cls = options.cls || "";
         options.style = options.style || "";
+        options.size = options.size || "auto";
+        options.header = options.header || "";    
         options.dataUpdate = options.dataUpdate || "";    
         options.optionValue = options.optionValue || "value";
         options.optionText = options.optionText || "text";
+        options.liveSearch = options.liveSearch ? "true" : "false";
         if (!_model)
             _model = new model ({ 
                 text: options.text,
@@ -25,7 +28,7 @@ var select = component.extend({
             <template en-template="${options.dataBind}">
                 <option id="{id}" value="{${options.optionValue}}">{${options.optionText}}</option>
             </template>
-            <select id="${options.id}-list" class="selectpicker form-control" ${options.multiple} data-type="component" en-bind="${options.dataBind}" en-update="${options.dataUpdate}">
+            <select id="${options.id}-list" class="selectpicker" ${options.multiple} data-live-search="${options.liveSearch}" data-size="${options.size}" data-header="${options.header}" data-type="component" en-bind="${options.dataBind}" en-update="${options.dataUpdate}">
             </select>
         </div>`;
         let _view = new view(html);
@@ -42,10 +45,6 @@ var select = component.extend({
     onrender:function(element)
     {
         let _self = this;
-        if (this.liveSearch)
-        {
-            $(_self._view._element).find('select:not(.ms)').selectpicker( { liveSearch:true } );
-        }
         $(element).on("changed.bs.select",
             function(ev, clickedIndex, newValue, oldValue) 
             {
@@ -92,7 +91,7 @@ var select = component.extend({
                             }
                         }
                     }
-                    _self.onselected(sSelected,clickedIndex, ev);
+                    if (clickedIndex) _self.onselected(sSelected,clickedIndex, ev);
                 }
                 catch(e)
                 {
@@ -126,11 +125,11 @@ var select = component.extend({
         if (_value == null) return;
         var _self = this;
         var m = this.getModel();
-        if (m.search(this.dataBind,this.optionValue,_value) == -1) 
+        var clickedIndex = -1;
+        if ((clickedIndex = m.search(this.dataBind,this.optionValue,_value)) == -1) 
         {
-            if (m.search(this.dataBind,this.optionText,_value) == -1) 
+            if ((clickedIndex = m.search(this.dataBind,this.optionText,_value)) == -1) 
             {
-                debugger;
                 $(this._view._element).find('select:not(.ms)').val('');
                 $(this._view._element).find('select:not(.ms)').selectpicker("refresh");
                 return;
@@ -168,6 +167,7 @@ var select = component.extend({
             $(this._view._element).find('select:not(.ms)').selectpicker("refresh");
         }
         $(_self._view._element).find('select:not(.ms)').selectpicker('refresh');
+        _self.onselected(_value,clickedIndex);
     },
     reset:function()
     {

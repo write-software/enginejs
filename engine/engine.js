@@ -331,16 +331,18 @@ if (!String.prototype.trim)
   };
 }
 
-if (typeof JSON.clone !== "function") {
+if (typeof JSON.copy !== "function") {
     JSON.clone = function(obj) {
         return JSON.parse(JSON.stringify(obj));
     };
 }
 
+
 //------------------------------------------------------------------------------
 // Macros
 
 $debug = function(x) { try { if (console) console.log(x);}catch(e){} };
+$copy = function(x) {  return x.slice(0); };
 $log = function(x) { try { if (console) console.log(x);}catch(e){} };
 $delay = function(t,f,s) { return setTimeout(function(){ f(s); },t); };
 $ft = function(v) { if (v == "") return 0; if (v == null) return 0; return parseFloat(v); };
@@ -781,7 +783,7 @@ var model = baseClass.extend({
         if (this.onbeforesync) this.onbeforesync.call(this);
         this.onSync.notify(this,this._data);   
     },
-    set:function(prop, value, updateBinds = true)
+    set:function(prop, value, updateBinds = true, force = false)
     {
         let obj = this._data;
         let propname = prop;
@@ -808,7 +810,7 @@ var model = baseClass.extend({
         if (prop.substr(0,1) >= '0' && prop.substr(0,1) <= '9') prop = "_"+prop;
         var oldvalue = obj[prop];
         obj[prop] = value;
-        if (updateBinds && oldvalue != value) this.onChange.notify( { data:this._data,prop:propname,value:value});
+        if ((updateBinds && oldvalue != value) || force) this.onChange.notify( { data:this._data,prop:propname,value:value});
         if (this.autoStore)
             this.storeLocal(this.name,this._data);
         this.ondatachange(prop,value);
@@ -1222,7 +1224,7 @@ var view = baseClass.extend({
                 let marker = placeholder.replace("this", _self.id).replace("{%", "").replace("%}", "").trim();
                 if ( marker.indexOf("(") != -1 && marker.indexOf(")") != -1)
                 {
-                    marker = "<span class='en-bind' en-bind='" + marker + "'></span>";
+                    marker = "<span class='en-bind _" + marker + "' en-bind='" + marker + "'></span>";
                     html = html.replace(placeholder, marker);    
                 }
                 else
@@ -1233,12 +1235,12 @@ var view = baseClass.extend({
                         obj = marker.substr(0,dot);
                         sProp = marker.substr(dot+1);
                         if (_core.isModel(obj))
-                            marker = "<span class='en-bind' en-model='" + obj + "' en-bind='" + sProp + "'></span>";
+                            marker = "<span class='en-bind _" + sProp + "' en-model='" + obj + "' en-bind='" + sProp + "'></span>";
                         else
-                            marker = "<span class='en-bind' en-bind='" + marker + "'></span>";
+                            marker = "<span class='en-bind _" + marker + "' en-bind='" + marker + "'></span>";
                     }
                     else
-                        marker = "<span class='en-bind' en-bind='" + marker + "'></span>";
+                        marker = "<span class='en-bind _" + marker + "' en-bind='" + marker + "'></span>";
                     html = html.replace(placeholder, marker);    
                 }
             }
@@ -2345,7 +2347,7 @@ var engine = baseClass.extend({
                 }]
             });
     },
-    prompt:function(message,callback,title,size,inputType,buttons)
+    prompt:function(message,callback,title,value,size,inputType,buttons)
     {
         if (bootbox == null)
         {
@@ -2355,6 +2357,7 @@ var engine = baseClass.extend({
         bootbox.prompt({
             size:size,
             title:title,
+            value:value,
             inputType:inputType,
             message:message,
             buttons:buttons,
