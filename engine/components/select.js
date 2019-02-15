@@ -98,11 +98,14 @@ var select = component.extend({
                     
                 }
             });    
+        $(element).find('select:not(.ms)').selectpicker('refresh');
     },
     _ondatachange:function(prop,value,data)
     {
         if (prop == this.dataUpdate)
             this.select(value)
+        else if (prop == "prop" || prop == this.dataBind)
+            this.refresh();
     },
     getSelected:function()
     {
@@ -178,6 +181,6 @@ var select = component.extend({
     },
     refresh:function()
     {
-        $(_self._view._element).find('select:not(.ms)').selectpicker('refresh');
+        $(this._view._element).find('select:not(.ms)').selectpicker('refresh');
     }
 });    

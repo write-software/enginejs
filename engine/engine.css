@@ -41,6 +41,11 @@ h3 {
     min-height:100vh;
 }
 
+.en-fullcard{
+    height:calc(100vh - 160px);
+}
+
+
 .en-inactive {
     display:none;
 }
@@ -429,16 +434,22 @@ ol.upload-files-list .upload-file .upload-progress-bar {
 }
 
 .en-padding-5 {
-    padding:5px;
+    padding:5px !important;
 }
 .en-padding-10 {
-    padding:10px;
+    padding:10px !important;
 }
 .en-padding-15 {
-    padding:15px;
+    padding:15px !important;
 }
 .en-padding-20 {
-    padding:20px;
+    padding:20px !important;
+}
+.en-padding-25 {
+    padding:25px !important;
+}
+.en-padding-30 {
+    padding:30px !important;
 }
 
 .en-lowercase {
@@ -534,7 +545,7 @@ tr.shown td.details-control {
 }
 
 .fixedheight {
-    height: calc(100vh - 250px);
+    height: calc(100vh - 230px);
 }
 
 .fixedlistheight {

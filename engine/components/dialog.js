@@ -77,9 +77,10 @@ var dialog = component.extend({
     {
         $('#'+this._id).modal('hide');
     },
-    show:function()
+    show:function(success)
     {
         var _self = this;
+        _self.success = success;
         if (!this._view._element)
         {
             this.render('body',true).then(function()

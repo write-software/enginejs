@@ -18,19 +18,29 @@ var dataView = component.extend({
             });
         _options.id = options.id;
         _options.methods = options.methods;
+        this._options = JSON.clone(options);
         this._super(_model,_view,_options);
     },
     setSelected:function(idx)
     {
+        if (idx >= this.getModel().get(this._options.dataBind).length)
+            return;
         $(this.getContainer()).find(".card").removeClass("dataview-select");
         $(this.getContainer()).find('[en-index="' + idx + '"]').addClass("dataview-select");   
         this._model.set("selected",idx);
 
         try
         {
-            var top = $(this.getContainer()).scrollTop();
             var position = $(this.getContainer()).find('[en-index="' + idx + '"]').position();
-            $(this.getContainer()).slimScroll({ scrollTo: (top+position.top)+'px' });    
+            var eh = $(this.getContainer()).find('[en-index="' + idx + '"]').innerHeight();
+            var top = $(this.getContainer()).scrollTop();
+            var h = $(this.getContainer()).innerHeight();
+            if (position.top + eh > top + h)
+            {
+                var dx = (position.top + eh) - (top + h);
+                top += dx;
+                $(this.getContainer()).scrollTop(top);
+            }
         }
         catch(e)
         {

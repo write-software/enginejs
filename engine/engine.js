@@ -783,6 +783,8 @@ var model = baseClass.extend({
         if (this.onbeforesync) this.onbeforesync.call(this);
         this.onSync.notify(this,this._data);   
     },
+    //---------------------------------------------------------------------------
+    // SET is used to set the value of a model property and apply binding update
     set:function(prop, value, updateBinds = true, force = false)
     {
         let obj = this._data;
@@ -813,20 +815,56 @@ var model = baseClass.extend({
         if ((updateBinds && oldvalue != value) || force) this.onChange.notify( { data:this._data,prop:propname,value:value});
         if (this.autoStore)
             this.storeLocal(this.name,this._data);
-        this.ondatachange(prop,value);
+        this.ondatachange(propname,value);
     },
-    applyJSON:function(json,_exclude = "", updateBinds = true)
+    //---------------------------------------------------------------------------
+    // PUT is like set but with not binding update
+    put:function(prop, value)
+    {
+        let obj = this._data;
+        let propname = prop;
+        let p = prop.indexOf(".");
+        while (p != -1)
+        {
+            let element = prop.substr(0, p);
+            if (obj[element] == null) 
+            {
+                prop = prop.substr(p + 1);
+                if (prop.indexOf(".") == -1) 
+                {
+                    obj[element] = {};
+                    obj = obj[element];
+                    break;
+                }
+                this.log("json path error "+propname);
+                return;
+            }
+            obj = obj[element];
+            prop = prop.substr(p + 1);
+            p = prop.indexOf(".");
+        }
+        if (prop.substr(0,1) >= '0' && prop.substr(0,1) <= '9') prop = "_"+prop;
+        var oldvalue = obj[prop];
+        obj[prop] = value;
+        if (this.autoStore)
+            this.storeLocal(this.name,this._data);
+    },
+    applyJSON:function(json,_exclude = "", prop = "", updateBinds = true)
     {
         if (typeof json != "object") return;
         for (var key in json) 
         {
             if (_exclude )
             {
-                if (_exclude.indexOfWord(key) == -1)
+                if (_exclude.indexOfWord(key) == -1 && !prop)
                     this._data[key] = json[key];
+                else if (_exclude.indexOfWord(key) == -1 && prop)
+                    this._data[prop][key] = json[key];
             }
-            else
+            else if (!prop)
                 this._data[key] = json[key];
+            else
+                this._data[prop][key] = json[key];
         }   
         if (updateBinds && this._controller) this._controller.refreshData()     
     },
@@ -1720,7 +1758,16 @@ component = baseClass.extend({
             {
                 let el = data.event.target;
                 let sProp = $(el).attr("en-bind");
-                _self._model.set(sProp, data.value);
+                let m = $(el).attr("en-model");
+
+                if (m)
+                {
+                    let model = $engine.getModel(m);
+                    if (model)
+                        model.set(sProp, data.value);
+                }
+                else
+                    _self._model.set(sProp, data.value);
                 if (_self.onchange) 
                     _self.onchange.call(_self,sProp, data);
             }
@@ -2085,6 +2132,14 @@ var engine = baseClass.extend({
         catch(e)
         {
         }        
+    },
+    getComponent:function(_component)
+    {
+        return _core.components[_component];
+    },
+    getModel:function(_model)
+    {
+        return _core.models[_model];
     },
     ready:function() {
         $('[data-toggle="popover"]').popover();
