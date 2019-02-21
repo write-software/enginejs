@@ -996,7 +996,7 @@ var model = baseClass.extend({
     {
         return JSON.stringify (this._data);
     },
-    search:function(_prop,_key,_value)
+    search:function(_prop,_key,_value,casesensitive = false)
     {
         var d = this._data[_prop];
         if (d)
@@ -1008,7 +1008,14 @@ var model = baseClass.extend({
                     var v = jsonPath(e, _key);
                 else    
                     var v = e[_key];
-                if (v && v == _value) return i;
+                if (!casesensitive)
+                {
+                    if (v && v.toLowerCase() == _value.toLowerCase()) return i;
+                }
+                else
+                {
+                    if (v && v == _value) return i;
+                }
             }
         }
         return -1;    
@@ -1914,6 +1921,17 @@ component = baseClass.extend({
     getContainer:function()
     {
         return this._view._element;
+    },
+    //--------------------------------------------------------------------
+    // This method allows dynamic binding elements post render
+    observe:function(selector)
+    {
+        var _self = this;
+        $(this._view._element).find(selector).each(function(index, el)
+        {
+            var sObserve = $(el).attr('en-observe');
+            _self._view._observe(el, 'change', sObserve);
+        });           
     }
 });
 
@@ -1924,12 +1942,10 @@ component = baseClass.extend({
     Main application engine class.
     
     Parameters 
-        _model : Model to be used (MUST EXISTS)
-        _view  : VIEW to be used (MUST EXISTS)
+        appName : User defined application name
         options : A JSON object set of component control options
         
         options = {
-            appName:""      // Application Name mainly for vanity. 
             methods: {      // this optional property add custom methods to tbe application instance
             }
         }
