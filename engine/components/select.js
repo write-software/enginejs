@@ -91,7 +91,7 @@ var select = component.extend({
                             }
                         }
                     }
-                    if (clickedIndex) _self.onselected(sSelected,clickedIndex, ev);
+                    if (typeof clickedIndex != "undefined") _self.onselected(sSelected,clickedIndex, ev);
                 }
                 catch(e)
                 {
@@ -125,7 +125,12 @@ var select = component.extend({
     },
     select:function(_value)
     {
-        if (_value == null) return;
+        if (_value == null) 
+        {
+            $(this._view._element).find('select:not(.ms)').val('');
+            $(this._view._element).find('select:not(.ms)').selectpicker("refresh");
+            return;
+        }
         var _self = this;
         var m = this.getModel();
         var clickedIndex = -1;
