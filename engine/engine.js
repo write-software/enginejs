@@ -1365,7 +1365,6 @@ var view = baseClass.extend({
         else if (attr == "value")
         {
             $(el).val(value);
-            $(el).focus();
         }
         else if (attr == "checked")
         {

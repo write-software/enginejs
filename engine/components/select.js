@@ -28,7 +28,7 @@ var select = component.extend({
             <template en-template="${options.dataBind}">
                 <option id="{id}" value="{${options.optionValue}}">{${options.optionText}}</option>
             </template>
-            <select id="${options.id}-list" class="selectpicker" ${options.multiple} data-live-search="${options.liveSearch}" data-size="${options.size}" data-header="${options.header}" data-type="component" en-bind="${options.dataBind}" en-update="${options.dataUpdate}">
+            <select id="${options.id}-list" class="selectpicker" ${options.multiple} data-live-search="${options.liveSearch}" data-size="${options.size}" data-width="100%" data-header="${options.header}" data-type="component" en-bind="${options.dataBind}" en-update="${options.dataUpdate}">
             </select>
         </div>`;
         let _view = new view(html);
