@@ -58,9 +58,12 @@ var table = component.extend({
                 {
                     var row = _self.table.row( this );
                     var data = row.data();
-                    if (opts.select && opts.select.style == "single")
-                        $('#'+_self._id + ' tbody').find('tr.en_selected').removeClass('en_selected'); 
-                     $(this).toggleClass('en_selected');
+                    if (!opts.noselect)
+                    {
+                        if (opts.select && opts.select.style == "single")
+                            $('#'+_self._id + ' tbody').find('tr.en_selected').removeClass('en_selected'); 
+                         $(this).toggleClass('en_selected');
+                    }
                     _self.onrow.call(this,data,row);
                 } );
             $('#'+_self._id + ' tbody').on('click', 'td', function (event) 
@@ -91,6 +94,11 @@ var table = component.extend({
     refresh:function()
     {
         this.table.draw();
+    },
+    redraw:function()
+    {
+        this.table.clear().draw();
+        this.table.rows.add(this.getModel().get(this.dataBind)).draw( false );
     },
     refreshRows:function(_selector)
     {

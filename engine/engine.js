@@ -471,6 +471,7 @@ var baseClass = Class.extend({
     },
     log:function(x)
     {
+        debugger;
         console.log(x);
     },
     hasClass:function(el, className)
@@ -716,7 +717,7 @@ var model = baseClass.extend({
         {
             for (var key in options.methods) 
             {
-                var reserved = ["_attachController","getState","changeState","set","get","asString"];
+                var reserved = ["_attachController","storeNow","notify","getData","setData","applyJSON","set","put","remove","get","asString"];
                 if (reserved.indexOf(key) == -1)
                     this[key] = options.methods[key];
                 else
@@ -746,6 +747,7 @@ var model = baseClass.extend({
     {
 
     },
+    // End Stubbs
     storeNow:function()
     {
         // Store the model data in local storage
@@ -848,6 +850,40 @@ var model = baseClass.extend({
         obj[prop] = value;
         if (this.autoStore)
             this.storeLocal(this.name,this._data);
+        this.ondatachange(propname,value);
+    },
+    //---------------------------------------------------------------------------
+    // REMOVE is used to remove a single model property and apply binding update
+    remove:function(prop, updateBinds = true)
+    {
+        let obj = this._data;
+        let propname = prop;
+        let p = prop.indexOf(".");
+        while (p != -1)
+        {
+            let element = prop.substr(0, p);
+            if (obj[element] == null) 
+            {
+                prop = prop.substr(p + 1);
+                if (prop.indexOf(".") == -1) 
+                {
+                    obj[element] = {};
+                    obj = obj[element];
+                    break;
+                }
+                this.log("json path error "+propname);
+                return;
+            }
+            obj = obj[element];
+            prop = prop.substr(p + 1);
+            p = prop.indexOf(".");
+        }
+        if (prop.substr(0,1) >= '0' && prop.substr(0,1) <= '9') prop = "_"+prop;
+        delete obj[prop];
+        if (updateBinds) this.onChange.notify( { data:this._data,prop:propname,value:null});
+        if (this.autoStore)
+            this.storeLocal(this.name,this._data);
+        this.ondatachange(propname,null);
     },
     applyJSON:function(json,_exclude = "", prop = "", updateBinds = true)
     {
@@ -1336,7 +1372,7 @@ var view = baseClass.extend({
         {
             debugger;
         }
-        if (typeof value == "string" && el.tagName == "DIV")
+        if (typeof value == "string" && el.tagName == "DIV" && value.indexOf("<") == -1) //Ignore anything that looks like HTML
         {
             value = value.replaceAll("\n","<br/>");
         }
