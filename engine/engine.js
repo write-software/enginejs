@@ -369,7 +369,8 @@ var _event = Class.extend({
     },
     attach:function(listener)
     {
-        this._listeners.push(listener);
+        if (this._listeners.indexOf(listener) == -1)
+            this._listeners.push(listener);
     },
     notify:function(args)
     {
@@ -1041,7 +1042,10 @@ var model = baseClass.extend({
             {
                 var e = d[i];
                 if (_key.indexOf(".") != -1)
+                {
                     var v = jsonPath(e, _key);
+                    if (v) v = v[0];
+                }
                 else    
                     var v = e[_key];
                 if (!casesensitive)
@@ -1083,15 +1087,20 @@ var model = baseClass.extend({
     sort:function(_prop,_key1,_key2)
     {
         function SortBy(a, b){
-            var aV1 = a[_key1].toLowerCase();
-            var bV1 = b[_key1].toLowerCase(); 
+            var aV1 = jsonPath(a,_key1);
+            var bV1 = jsonPath(b,_key1); 
 
+            if (typeof aV1 == "string") aV1 = aV1.toLowerCase();
+            if (typeof bV1 == "string") bV1 = bV1.toLowerCase();
             if ((aV1 < bV1)) return -1;
             if ((aV1 > bV1)) return 1;
             if (_key2)
             {
-                var aV2 = a[_key2].toLowerCase();
-                var bV2 = b[_key2].toLowerCase();                 
+                var aV12= jsonPath(a,_key2);
+                var bV2 = jsonPath(b,_key2); 
+        
+                if (typeof aV2 == "string") aV2 = aV2.toLowerCase();
+                if (typeof bV2 == "string") bV2 = bV2.toLowerCase();
                 if ((aV2 < bV2)) return -1;
                 if ((aV2 > bV2)) return 1;
             }
@@ -2688,19 +2697,14 @@ var engine = baseClass.extend({
                     setTimeout(function () {
                         $('.removeFile').tooltip();
                     }, 0);
-                })
-                    .bind('fileuploadprogress', function (e, data) {
-                    var progress = parseInt(data.loaded / data.total * 100, 10);
-                    data.context.find('.progress').css('width', progress + '%');
-                })
-                    .bind('fileuploadfail', function (e, data) {
-                    console.log('fail');
+                }).bind('fileuploadfail', function (e, data) {
+                    if (callback) callback("failed",data);
                 }).bind('fileuploadstart', function (e) {
                     _self.busy(true);
-                    if (callback) callback("send",e.data);
+                    if (callback) callback("start");
                 }).bind('fileuploaddone', function (e,data) {
                     _self.busy(false);
-                    if (callback) callback("done",e.data);
+                    if (callback) callback("done",data);
                     _self.done();
                 })
 
@@ -3419,7 +3423,7 @@ var router = Class.extend({
             {
                 sHash = sHash.replace("/","");
                 if (window.location.hash != sHash)
-                    window.location = sHash;
+                    window.location.hash = sHash;
                 else
                     this.navigateTo(sHash)
                 resolve();
