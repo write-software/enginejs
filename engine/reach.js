@@ -193,7 +193,10 @@ reach = {
 			case 'Cordova':
 			case 'node':
 			case 'webclient':
-				reach.fs.writeFile(name + ".data",data,cb,cb);
+				var sData = data;
+				if (typeof data == "object")
+					sData = JSON.stringify(data);
+				reach.fs.writeFile(name + ".data",sData,cb,cb);
 				break;
 			default:
 				$engine.storeLocal(name, data);
@@ -205,12 +208,24 @@ reach = {
 			case 'Cordova':
 			case 'node':
 			case 'webclient':
-				reach.fs.readFile(name + ".data",function(data){
+
+				reach.fs.readFile(name + ".data",function(sData)
+				{
+					var data ;
+					try
+					{
+						data = JSON.parse(sData);
+					}
+					catch(e)
+					{
+					}
 					cb && cb(data);
 				},function()
                 {
+					debugger;
                     cb & cb(sDefault);
-                });
+
+				});
 				break;
 			default:
 				var data = $engine.getLocal(name, sDefault);
@@ -874,6 +889,7 @@ reach = {
 			reach.resume();
 			reach.getFiles();
 			reach.localDir = cordova.file.dataDirectory;
+			reach.override.onReady();
         }
         catch (e)
 

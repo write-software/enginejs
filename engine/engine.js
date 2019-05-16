@@ -331,7 +331,7 @@ if (!String.prototype.trim)
   };
 }
 
-if (typeof JSON.copy !== "function") {
+if (typeof JSON.clone !== "function") {
     JSON.clone = function(obj) {
         return JSON.parse(JSON.stringify(obj));
     };
@@ -731,11 +731,7 @@ var model = baseClass.extend({
         } 
         if (this.autoStore)
         {
-            var d = this.getLocal(this.name,this._data)
-            if (d)
-                this._data = $.extend(this._data,d);
-            else
-                this.storeLocal(this.name,this._data)
+            this.readNow();
         }
         if (this.oninit) this.oninit.call(this);
     },
@@ -744,7 +740,7 @@ var model = baseClass.extend({
         this._controller = controller;
     },
     // Stubbs
-    ondatachange:function(prop)
+    ondatachange:function(prop,value)
     {
 
     },
@@ -752,7 +748,31 @@ var model = baseClass.extend({
     storeNow:function()
     {
         // Store the model data in local storage
-        this.storeLocal(this.name,this._data);
+        this.storeData(this.name,this._data);
+    },
+    readNow:function(cb)
+    {
+        // Read the model data in local data storage
+        var d;
+        var _self = this;
+        if (reach)
+        {
+            reach.restoreData(this.name,function(d)
+            {
+                if (d)
+                {
+                    _self._data = $.extend(_self._data,d);
+                    _self.notify();
+                }
+                cb && cb();
+            },this._data)
+        }
+        else
+        { 
+            d = this.getLocal(this.name,this._data)
+            if (d)
+                this._data = $.extend(this._data,d);
+        }
     },
     notify:function(_prop = "")
     {
@@ -770,7 +790,7 @@ var model = baseClass.extend({
         this._data = data;
         if (updateBinds) this.onChange.notify( { data:this._data,prop:"data",value:data});
         if (this.autoStore)
-            this.storeLocal(this.name,this._data);
+            this.storeData(this.name,this._data);
         this.ondatachange("data",data);
     },
     get:function(prop)
@@ -817,7 +837,7 @@ var model = baseClass.extend({
         obj[prop] = value;
         if ((updateBinds && oldvalue != value) || force) this.onChange.notify( { data:this._data,prop:propname,value:value});
         if (this.autoStore)
-            this.storeLocal(this.name,this._data);
+            this.storeData(this.name,this._data);
         this.ondatachange(propname,value);
     },
     //---------------------------------------------------------------------------
@@ -850,7 +870,7 @@ var model = baseClass.extend({
         var oldvalue = obj[prop];
         obj[prop] = value;
         if (this.autoStore)
-            this.storeLocal(this.name,this._data);
+            this.storeData(this.name,this._data);
         this.ondatachange(propname,value);
     },
     //---------------------------------------------------------------------------
@@ -883,7 +903,7 @@ var model = baseClass.extend({
         delete obj[prop];
         if (updateBinds) this.onChange.notify( { data:this._data,prop:propname,value:null});
         if (this.autoStore)
-            this.storeLocal(this.name,this._data);
+            this.storeData(this.name,this._data);
         this.ondatachange(propname,null);
     },
     applyJSON:function(json,_exclude = "", prop = "", updateBinds = true)
@@ -920,7 +940,7 @@ var model = baseClass.extend({
         obj[prop].push(value);
         this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
         if (this.autoStore)
-            this.storeLocal(this.name,this._data)
+            this.storeData(this.name,this._data)
         this.ondatachange(prop,value);
     },
     pushTop:function(prop, value)
@@ -938,7 +958,7 @@ var model = baseClass.extend({
         obj[prop].unshift(value);
         this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
         if (this.autoStore)
-            this.storeLocal(this.name,this._data)
+            this.storeData(this.name,this._data)
         this.ondatachange(prop,value);
     },
     pop:function(prop)
@@ -956,7 +976,7 @@ var model = baseClass.extend({
         var value = obj[prop].pop();
         this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
         if (this.autoStore)
-            this.storeLocal(this.name,this._data)
+            this.storeData(this.name,this._data)
         this.ondatachange(prop);
         return value;
     },
@@ -989,7 +1009,7 @@ var model = baseClass.extend({
         obj[prop][index] = value;
         this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
         if (this.autoStore)
-            this.storeLocal(this.name,this._data)
+            this.storeData(this.name,this._data)
         this.ondatachange(prop);
     },
     removeAt:function(prop,index)
@@ -1007,7 +1027,7 @@ var model = baseClass.extend({
         var value = obj[prop].splice(index,1);
         this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
         if (this.autoStore)
-            this.storeLocal(this.name,this._data)
+            this.storeData(this.name,this._data)
         this.ondatachange(prop);
         return value;
     },
@@ -1026,7 +1046,7 @@ var model = baseClass.extend({
         obj[prop].splice(index,0,value);
         this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
         if (this.autoStore)
-            this.storeLocal(this.name,this._data)
+            this.storeData(this.name,this._data)
         this.ondatachange(prop,value,index);
     },
     asString:function()
@@ -1112,7 +1132,19 @@ var model = baseClass.extend({
             d.sort(SortBy);
             this.onChange.notify( { data:this._data,prop:_prop,value:d});
             if (this.autoStore)
-                this.storeLocal(this.name,this._data)
+                this.storeData(this.name,this._data)
+        }
+    },
+    storeData:function(name,data,cb)
+    {
+        if (reach)
+        {
+            reach.storeData(name,data,cb);
+        }
+        else
+        {
+            this.storeLocal(this.name,this._data)
+            if (cb) cb();
         }
     }
 });
@@ -1595,6 +1627,17 @@ var view = baseClass.extend({
                                  _self._applyValue(_self._element,value,sAttr);
                          }
                     }
+               }
+               if (typeof _self._controller.afterBinds == "function")
+               {
+                   try
+                   {
+                        _self._controller.afterBinds();
+                   }
+                   catch(e)
+                   {
+
+                   }
                }
                resolve();
             }
@@ -2326,7 +2369,7 @@ var engine = baseClass.extend({
         }
         BootstrapDialog.show(config);    
     },
-    warning:function(msg,timeout)
+    warning:function(msg,timeout,sTitle = "WARNING")
     {
         if (BootstrapDialog == null)
         {
@@ -2335,7 +2378,7 @@ var engine = baseClass.extend({
         }
         BootstrapDialog.show({
             type:BootstrapDialog.TYPE_WARNING,
-            title:'WARNING:',
+            title:sTitle,
             message:msg, 
             closable:true,     
             onshow: function(dialogRef)
@@ -2701,7 +2744,7 @@ var engine = baseClass.extend({
                     if (callback) callback("failed",data);
                 }).bind('fileuploadstart', function (e) {
                     _self.busy(true);
-                    if (callback) callback("start");
+                    if (callback) callback("start",e);
                 }).bind('fileuploaddone', function (e,data) {
                     _self.busy(false);
                     if (callback) callback("done",data);

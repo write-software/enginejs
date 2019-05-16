@@ -52,7 +52,6 @@ var table = component.extend({
             delete opts.cls;
             delete opts.style;
             opts.data = recs;
-            _self.log(JSON.stringify(opts))
             _self.table = $('#'+_self._id).DataTable(opts).columns.adjust()
             $('#'+_self._id + ' tbody').on('click', 'tr', function () 
                 {
