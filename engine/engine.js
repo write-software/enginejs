@@ -801,11 +801,6 @@ var model = baseClass.extend({
             return result[0];
         return result;
     },
-    sync:function()
-    {
-        if (this.onbeforesync) this.onbeforesync.call(this);
-        this.onSync.notify(this,this._data);   
-    },
     //---------------------------------------------------------------------------
     // SET is used to set the value of a model property and apply binding update
     set:function(prop, value, updateBinds = true, force = false)
