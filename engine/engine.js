@@ -925,7 +925,7 @@ var model = baseClass.extend({
         }   
         if (updateBinds && this._controller) this._controller.refreshData()     
     },
-    push:function(prop, value)
+    push:function(prop, value, updateBinds = true)
     {
         let obj = this._data;
         let p = prop.indexOf(".");
@@ -938,12 +938,13 @@ var model = baseClass.extend({
         }
         if (!$.isArray(obj[prop])) return;
         obj[prop].push(value);
-        this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
+        if (updateBinds)
+            this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
         if (this.autoStore)
             this.storeData(this.name,this._data)
         this.ondatachange(prop,value);
     },
-    pushTop:function(prop, value)
+    pushTop:function(prop, value, updateBinds = true)
     {
         let obj = this._data;
         let p = prop.indexOf(".");
@@ -956,12 +957,13 @@ var model = baseClass.extend({
         }
         if (!$.isArray(obj[prop])) return;
         obj[prop].unshift(value);
-        this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
+        if (updateBinds)
+            this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
         if (this.autoStore)
             this.storeData(this.name,this._data)
         this.ondatachange(prop,value);
     },
-    pop:function(prop)
+    pop:function(prop, updateBinds = true)
     {
         let obj = this._data;
         let p = prop.indexOf(".");
@@ -974,7 +976,8 @@ var model = baseClass.extend({
         }
         if (!$.isArray(obj[prop])) return;
         var value = obj[prop].pop();
-        this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
+        if (updateBinds)
+            this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
         if (this.autoStore)
             this.storeData(this.name,this._data)
         this.ondatachange(prop);
@@ -994,7 +997,7 @@ var model = baseClass.extend({
         if (!$.isArray(obj[prop])) return null;
         return obj[prop][index];
     },
-    setAt:function(prop,index,value)
+    setAt:function(prop,index,value, updateBinds = true)
     {
         let obj = this._data;
         let p = prop.indexOf(".");
@@ -1007,12 +1010,13 @@ var model = baseClass.extend({
         }
         if (!$.isArray(obj[prop])) return null;
         obj[prop][index] = value;
-        this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
+        if (updateBinds)
+            this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
         if (this.autoStore)
             this.storeData(this.name,this._data)
         this.ondatachange(prop);
     },
-    removeAt:function(prop,index)
+    removeAt:function(prop,index, updateBinds = true)
     {
         let obj = this._data;
         let p = prop.indexOf(".");
@@ -1025,13 +1029,14 @@ var model = baseClass.extend({
         }
         if (!$.isArray(obj[prop])) return;
         var value = obj[prop].splice(index,1);
-        this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
+        if (updateBinds)
+            this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
         if (this.autoStore)
             this.storeData(this.name,this._data)
         this.ondatachange(prop);
         return value;
     },
-    insertAt:function(prop,index,value)
+    insertAt:function(prop,index,value, updateBinds = true)
     {
         let obj = this._data;
         let p = prop.indexOf(".");
@@ -1044,7 +1049,8 @@ var model = baseClass.extend({
         }
         if (!$.isArray(obj[prop])) return;
         obj[prop].splice(index,0,value);
-        this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
+        if (updateBinds)
+            this.onChange.notify( { data:this._data,prop:prop,value:obj[prop]});
         if (this.autoStore)
             this.storeData(this.name,this._data)
         this.ondatachange(prop,value,index);
@@ -1058,24 +1064,30 @@ var model = baseClass.extend({
         var d = this._data[_prop];
         if (d)
         {
-            for (var i = 0;i < d.length;i++)
+            try{
+                for (var i = 0;i < d.length;i++)
+                {
+                    var e = d[i];
+                    if (_key.indexOf(".") != -1)
+                    {
+                        var v = jsonPath(e, _key);
+                        if (v) v = v[0];
+                    }
+                    else    
+                        var v = e[_key];
+                    if (!casesensitive)
+                    {
+                        if (v && v.toLowerCase() == _value.toLowerCase()) return i;
+                    }
+                    else
+                    {
+                        if (v && v == _value) return i;
+                    }
+                }
+            }
+            catch(e)
             {
-                var e = d[i];
-                if (_key.indexOf(".") != -1)
-                {
-                    var v = jsonPath(e, _key);
-                    if (v) v = v[0];
-                }
-                else    
-                    var v = e[_key];
-                if (!casesensitive)
-                {
-                    if (v && v.toLowerCase() == _value.toLowerCase()) return i;
-                }
-                else
-                {
-                    if (v && v == _value) return i;
-                }
+                console.log("Search Failed:"+e.message);
             }
         }
         return -1;    
@@ -1104,7 +1116,7 @@ var model = baseClass.extend({
         var d = this._data[_prop];
         if (d) d.forEach(fn);
     },
-    sort:function(_prop,_key1,_key2)
+    sort:function(_prop,_key1,_key2,bNumeric1,bNumeric2)
     {
         function SortBy(a, b){
             var aV1 = jsonPath(a,_key1);
@@ -1112,8 +1124,16 @@ var model = baseClass.extend({
 
             if (typeof aV1 == "string") aV1 = aV1.toLowerCase();
             if (typeof bV1 == "string") bV1 = bV1.toLowerCase();
-            if ((aV1 < bV1)) return -1;
-            if ((aV1 > bV1)) return 1;
+            if (bNumeric1)
+            {
+                if (($ft(aV1) < $ft(bV1))) return -1;
+                if (($ft(aV1) > $ft(bV1))) return 1;
+            }
+            else
+            {
+                if ((aV1 < bV1)) return -1;
+                if ((aV1 > bV1)) return 1;
+            }
             if (_key2)
             {
                 var aV12= jsonPath(a,_key2);
@@ -1121,12 +1141,31 @@ var model = baseClass.extend({
         
                 if (typeof aV2 == "string") aV2 = aV2.toLowerCase();
                 if (typeof bV2 == "string") bV2 = bV2.toLowerCase();
-                if ((aV2 < bV2)) return -1;
-                if ((aV2 > bV2)) return 1;
+                if (bNumeric2)
+
+
+
+
+
+
+                {
+                    if (($ft(aV2) < $ft(bV2))) return -1;
+                    if (($ft(aV2) > $ft(bV2))) return 1;
+
+
+                }
+                else
+
+
+
+                {
+                    if ((aV2 < bV2)) return -1;
+                    if ((aV2 > bV2)) return 1;
+                }
             }
             return 0;
           }
-        var d = this._data[_prop];
+          var d = this._data[_prop];
         if (d)
         {
             d.sort(SortBy);
