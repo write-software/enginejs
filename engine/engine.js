@@ -1867,7 +1867,6 @@ component = baseClass.extend({
                 }
             }
         );
-        );
         // Create a callback on any change to the view
         this._view.onChange.attach(
             (sender, data) =>
