@@ -2,7 +2,7 @@
  *
  * The author of this software is Steve Egginton.
  *
- * Copyright (c) 2018 The Write Software Company Limited.
+ * Copyright (c) 2018,2019 The Write Software Company Limited.
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose without fee is hereby granted, provided that this entire notice
@@ -713,7 +713,6 @@ var model = baseClass.extend({
             }
         }
         this.onChange = new _event( {sender:this} );
-        this.onSync = new _event( {sender:this} );
         if (typeof options.methods == "object")
         {
             for (var key in options.methods) 
@@ -1673,6 +1672,7 @@ var view = baseClass.extend({
 
                    }
                }
+               _self._applyEvents();
                resolve();
             }
         });
@@ -1748,6 +1748,7 @@ var view = baseClass.extend({
                         method += "()";                   
                     }
                     $(el).attr(event.replace("en-","on"),method);
+                    $(el).removeAttr(event);
                 });            
                         
             }
@@ -1775,19 +1776,16 @@ var view = baseClass.extend({
                     {
                         $(selector).append(_self._element);
                         _self._binds(data);
-                        _self._applyEvents();
                     }
                     else if (replace)
                     {
                         $(selector).replaceWith(_self._element);
-                        _self._applyEvents();
                         _self._binds(data);
                     }
                     else
                     {
                         $(selector).html(_self._element);            
                         _self._binds(data);
-                        _self._applyEvents();
                     }
                     $(_self._element).find("*").attr("en-component", _self.id);
                     resolve(_self._element);
@@ -1869,16 +1867,6 @@ component = baseClass.extend({
                 }
             }
         );
-        this._model.onSync.attach(
-            (sender, arg) =>
-            {
-                _self.refreshData();
-                if (_self.ondatachange) 
-                {
-                     $('select:not(.ms)').selectpicker('refresh');
-                    _self.ondatachange.call(_self,"*",null,arg.data);
-                }
-            }
         );
         // Create a callback on any change to the view
         this._view.onChange.attach(
@@ -2949,413 +2937,6 @@ var http = baseClass.extend({
         return  this._property;
     }
 });
-
-////////////////////////////////////////////////////////////////////////////
-/*
-    DATAMAP class
-
-    A class is for mapping data properties between JSON Objects, works with Store class.
-    
-    This provides two-way movement of data.
-*/
-////////////////////////////////////////////////////////////////////////////
-var dataMap = baseClass.extend({
-    init:function() 
-    {
-        this._super();
-        this._map = [];
-    },
-    map:function(_sourceObj,_targetObj,_props)
-    {
-        this._map = [];
-        if (typeof _props == "string")
-        {
-            let props = _props.split(",");
-            for (let i = 0;i < props.length;i++)
-            {
-                let sProp = props[i];
-                this._map.push( { source:_sourceObj, target:_targetObj, prop:sProp});
-            }
-        }
-        if (typeof _props == "function")
-        {
-            this._map.push( { source:_sourceObj, target:_targetObj, prop:_props});
-        }
-        return this._map.length;  
-    },
-    applyTarget:function()
-    {
-        for (let i = 0;i < this._map.length;i++)
-        {
-            let m = this._map[i];
-            if (typeof m.prop == "function")
-                m.prop(m.source,m.target);
-            else
-            {
-                var prop = m.prop;
-                var s = m.source; 
-                var t = m.target; 
-                while ((d = prop.indexOf(".")) != -1)
-                {
-                    let p = prop.substr(0,d);
-                    s = s[p];
-                    t = t[p];
-                    prop = prop.substr(d+1);
-                }
-                s[prop] = t[prop];
-            }
-        }
-    },
-    applySource:function()
-    {
-        for (let i = 0;i < this._map.length;i++)
-        {
-            let m = this._map[i];
-            if (typeof m.prop == "function")
-                m.prop(m.target,m.source);
-            else
-            {
-                var prop = m.prop;
-                var s = m.source; 
-                var t = m.target; 
-                while ((d = prop.indexOf(".")) != -1)
-                {
-                    let p = prop.substr(0,d);
-                    s = s[p];
-                    t = t[p];
-                    prop = prop.substr(d+1);
-                }
-                t[prop] = s[prop];
-            }
-        }
-    }
-})
-
-////////////////////////////////////////////////////////////////////////////
-/*
-    STORE class
-
-    A store is for general data storage and works with PouchDB and the DataMaps class.
-    
-    Parameters 
-        options : {
-            type:'simple',  // Works like a model but much simpler
-            data: [],       // Used with simple type
-            methods:{
-            }
-        }
-*/
-////////////////////////////////////////////////////////////////////////////
-var store = baseClass.extend({
-    init:function(options) 
-    {
-        this._super();
-        this.db = null;
-        this.data = [];
-        this.dataMaps = [];
-        if (options)
-        {
-            this.type = options.type || "simple";
-            if (this.type == "simple")
-            {
-                if (options.data instanceof Array)
-                {
-                    this.data = options.data;   
-                }
-            }
-            if (typeof options.methods == "object")
-            {
-                for (var key in options.methods) 
-                {
-                    var reserved = ["openDB","put","get"];
-                    if (reserved.indexOf(key) == -1)
-                        this[key] = options.methods[key];
-                    else
-                        this.log("WARNING: method matched reserved name");
-                };
-            }
-        }
-    },
-    openDB:function(sName = "unknown",opts = {skip_setup: true})
-    {
-        var _self = this;
-        return new Promise((resolve, reject) => {
-            try
-            {        
-                if (_self.type == "simple")
-                {
-                    throw "Method openDB not allowed on type 'simple'";
-                }
-                _self.db = new PouchDB(sName, opts);
-                _self.db.changes({
-                  since: 'now',
-                  live: true,
-                  include_docs: true
-                }).on('change', function (change) {
-                    _self.onchange(change)   
-                }).on('error', function (err) {
-                    _self.onerror(err)   
-                });
-                resolve(_self.db);
-            }
-            catch(e)
-            {
-                reject(e); 
-            }    
-        });        
-    },
-    put:function(data)
-    {
-        var _self = this;
-     //   delete data._rev;
-        return new Promise((resolve, reject) => {
-            try
-            {        
-                if (typeof data != "object")
-                    throw "Invalid type for method put on store";
-                if (_self.type == "simple")
-                {
-                    if (!data._id) data._id = new Date().toISOString();
-                    _self.data.push(data);    
-                }
-                else
-                {
-                    if (!data._id) data._id = new Date().toISOString();
-                    _self.db.put(data, {force:true});
-                }
-                resolve(_self);
-            }
-            catch(e)
-            {
-                reject(e); 
-            }    
-        });        
-    },
-    get:function(id)
-    {
-        var _self = this;
-        return new Promise((resolve, reject) => {
-            try
-            {        
-                if (_self.type == "simple")
-                {
-                    if (id != null)
-                    {
-                        var results = [];
-                        for (key in _self.data)
-                        {
-                            var entry = _self.data[key];
-                            if (entry._id == id)
-                            {
-                                results.push(entry);
-                                break;
-                            } 
-                        }
-                        resolve(results);
-                    }
-                    else
-                        resolve(_self.data);
-                }
-                else
-                {
-                    _self.db.get(id).then(function(doc)
-                    {
-                        resolve(doc);
-                    }).catch(function(err)
-                    {
-                        reject(err); 
-                    });
-                }
-            }
-            catch(e)
-            {
-                reject(e); 
-            }    
-        });        
-    },
-    info:function()
-    {
-        var _self = this;
-        if (_self.type == "simple")
-        {
-            throw "Method info not allowed on type 'simple'";
-        }
-        return new Promise((resolve, reject) => {
-            try
-            {        
-                _self.db.info().then(function(info)
-                {
-                    resolve(info);
-                }).catch(function(err)
-                {
-                    reject(err); 
-                });
-            }
-            catch(e)
-            {
-                reject(e); 
-            }    
-        });        
-    },
-    getall:function(ops = { include_docs: true, attachments:true } )
-    {
-        var _self = this;
-        if (_self.type == "simple")
-        {
-            throw "Method info not allowed on type 'simple'";
-        }
-        return new Promise((resolve, reject) => {
-            try
-            {        
-                _self.db.allDocs(ops).then(function(docs)
-                {
-                    resolve(docs);
-                }).catch(function(err)
-                {
-                    reject(err); 
-                });
-            }
-            catch(e)
-            {
-                reject(e); 
-            }    
-        });        
-    },
-    login:function(user,pwd)
-    {
-        var _self = this;
-        if (_self.type == "simple")
-        {
-            throw "Method login not allowed on type 'simple'";
-        }
-        return new Promise((resolve, reject) => {
-            try
-            {  
-                debugger;      
-                _self.db.login(user,pwd).then(function(docs)
-                {
-                    resolve(docs);
-                }).catch(function(err)
-                {
-                    reject(err); 
-                });
-            }
-            catch(e)
-            {
-                reject(e); 
-            }    
-        });        
-    },
-    find:function(criteria)
-    {
-        var _self = this;
-        return new Promise((resolve, reject) => {
-            try
-            {        
-                if (_self.type == "simple")
-                {
-                    if (id != null)
-                    {
-                        var results = [];
-                        for (key in _self.data)
-                        {
-                            var entry = _self.data[key];
-                            if (entry._id == id)
-                            {
-                                results.push(entry);
-                                break;
-                            } 
-                        }
-                        resolve(results);
-                    }
-                    else
-                        resolve(_self.data);
-                }
-                else
-                {
-                    var doc =  _self.db.find(criteria);
-                    resolve(doc);
-                }
-            }
-            catch(e)
-            {
-                reject(e); 
-            }    
-        });        
-    },
-    attachModel:function(_docname, _template, _subset, _model, _props)
-    {
-        this.dataMaps[_docname] = { 
-            model: _model, 
-            template: _template, 
-            subset: _subset, 
-            dataMap: new dataMap(), 
-            props: _props 
-        };
-    },
-    initDataMaps:function()
-    {
-        for (var docname in this.dataMaps) 
-        {
-            let map = this.dataMaps[docname];
-            coreData.get(docname)
-            .then(function(doc)
-            {
-                let source;
-                if (map.subset)
-                    source = doc[map.subset];
-                else
-                    source = doc;
-                map.dataMap.map(source,map.model.getData(),map.props);
-                map.dataMap.applySource();
-                map.model.sync();
-            })
-            .catch(function(err)
-            {
-                if (err.status == 404)
-                {
-                    let source;
-                    if (map.subset)
-                        source = map.template[map.subset];
-                    else
-                        source = map.template;
-                    coreData.put(map.template); 
-                    map.dataMap.map(source,map.model.getData(),map.props);
-                    map.dataMap.applySource();
-                }
-            });
-        }
-    },
-    updateDataMap:function(docname)
-    {
-        let _self = this;
-        let map = _self.dataMaps[docname];
-        coreData.get(docname)
-        .then(function(doc)
-        {
-            let source;
-            if (map.subset)
-                source = doc[map.subset];
-            else
-                source = doc;
-            map.dataMap.map(source,map.model.getData(),map.props);
-            map.dataMap.applyTarget();
-            coreData.put(doc); 
-        })
-        .catch(function(err)
-        {
-            _self.warning(`updateDataMap doc ${docname} not found`);    
-        });
-    },
-    onchange:function(change)
-    {
-        // handle change
-    },
-    onerror:function(err)
-    {
-        // handle errors
-    }
-})
 
 ////////////////////////////////////////////////////////////////////////////
 /*
