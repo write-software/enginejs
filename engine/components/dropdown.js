@@ -3,15 +3,16 @@ var dropdown = component.extend({
     {
         let _options = {};
         options.text = options.text || "";
+        options.compClass = options.compClass || "";
         options.className = options.className || "btn-primary";
         options.data =  options.data || [];
         options.dataBind = options.dataBind || "data";
         let html = `
-        <div>
+        <div class="${options.compClass}">
             <template en-template="${options.dataBind}">
                 <li class="dropdown-item">
                     <a href="javascript:void(0);">
-                        <div class="menu-info" id="{id}" >
+                        <div class="menu-info" id="{id}" data-value="{value}" >
                             {text}
                         </div>
                     </a>
@@ -38,9 +39,25 @@ var dropdown = component.extend({
     _onrender:function()
     {
         var _self = this;
-        $(this.getContainer()).find('.menu-info').on('click',function() {
-            _self.onselected($(this).text().trim());
+        $(this.getContainer()).find('.menu-info').on('click',function(evt) {
+            _self.setText($(this).text().trim());
+            _self.onselected($(this).text().trim(),$(this).attr("data-value"),evt);
         }); 
+    },
+    ondatachange:function(prop)
+    {
+        if (prop == this.dataBind)
+        {
+            var _self = this;
+            $(this.getContainer()).find('.menu-info').on('click',function(evt) {
+                _self.onselected($(this).text().trim(),$(this).attr("data-value"),evt);
+            });     
+        }
+    },
+    setText:function(sText)
+    {
+        let el = this.getContainer();
+        $(el).find("button").html(sText);
     },
     onselected:function()
     {

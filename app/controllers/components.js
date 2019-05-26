@@ -18,9 +18,8 @@ var dropdownBtn = new dropdown({
     id:'dropdownBtn',
     text:'Dropdown',
     methods:{
-        onselected:function(selected)
+        onselected:function(selected, clickedIndex)
         {              
-            alert(selected.text);        
         }
     }
 },categoryModel);
@@ -30,7 +29,6 @@ var lstGroup = new listgroup({
     methods:{
         onselected:function(selected, clickedIndex)
         {              
-            alert(selected.text);        
         }
     }
 },categoryModel);

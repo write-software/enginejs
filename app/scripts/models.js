@@ -3,6 +3,10 @@
 
 var categoryModel = new model({
     data:[
+        { text:'Cars', value:'Cars' },
+        { text:'Electrical', value:'Electrical' },
+        { text:'Plants', value:'Plants' },
+        { text:'Stationary', value:'Stationary' },
     ]
 },
 { 
@@ -10,7 +14,28 @@ var categoryModel = new model({
 });
 
 var dataModel = new model({
-    data:[ ]
+    data:[ 
+        { 
+            fdGUID:'1527953174_21572300', 
+            fdCategory:'Cars', 
+            fdProdID:'001', 
+            fdName:'Jaguar XK8', 
+            fdDesc:'The Jaguar XK8 (project code X100) is a 2-door grand tourer that was launched by Jaguar Cars in 1996, and was the first generation of a new XK series. The XK8 was available in coupé or convertible body styles and with the new 4.0-litre Jaguar AJ-V8 engine.',
+            fdQty:8,
+            fdTimeStamp:'2018-06-01 18:09:01',
+            fdImage:'' 
+        },    
+        { 
+            fdGUID:'1527953174_21571500', 
+            fdCategory:'Plant', 
+            fdProdID:'002', 
+            fdName:'Rose', 
+            fdDesc:'A rose is a woody perennial flowering plant of the genus Rosa, in the family Rosaceae, or the flower it bears. There are over three hundred species and thousands of cultivars.',
+            fdQty:12,
+            fdTimeStamp:'2018-06-02 16:26:14',
+            fdImage:'' 
+        },    
+    ]
 },
 {
     name:'dataModel'
@@ -160,10 +185,11 @@ for the controller model.
 });
 
 //==============================================================================
+// Using the http class
+/*
+var connector = new http("./api/");
 
-var mconnector = new http("./api/");
-
-mconnector.get( { command:'categorys.get' } )
+connector.get( { command:'categorys.get' } )
     .then(function(resp)
     {
         if (resp.success)
@@ -174,7 +200,7 @@ mconnector.get( { command:'categorys.get' } )
             app.warning(resp.errors[0].error);                               
     });
     
-mconnector.get( { command:'products.get' } )
+connector.get( { command:'products.get' } )
     .then(function(resp)
     {
         if (resp.success)
@@ -184,5 +210,5 @@ mconnector.get( { command:'products.get' } )
         else
             app.warning(resp.errors[0].error);                               
     });
-
+*/
    
