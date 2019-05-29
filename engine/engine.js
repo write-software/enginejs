@@ -1352,6 +1352,10 @@ var view = baseClass.extend({
                         output = _self._controller.emptyRender();
                     }
                 }
+                if (typeof _self._controller.afterDataRender == "function")
+                {
+                    output += _self._controller.afterDataRender();
+                }
             }
             else
                 return null;
