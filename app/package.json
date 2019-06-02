@@ -148,6 +148,7 @@
                 "{app}/controllers/dashboard",
                 "{app}/controllers/development",
                 "{app}/controllers/components",
+                "{app}/controllers/elements",
                 "{app}/controllers/tables"
             ],
             "app":[

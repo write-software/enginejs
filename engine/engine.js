@@ -47,6 +47,7 @@ window._core = {
     routers:{},
     components:{},
     models:{},
+    elements:{},
     constants:{},
     agent:navigator.userAgent.toLowerCase(),
     log:function(x)
@@ -124,6 +125,10 @@ window._core = {
     isConstant:function(name)
     {
         return this.constants[name] == null ? false : true;
+    },
+    isElements:function(name)
+    {
+        return this.elements[name] == null ? false : true;
     },
     isRouter:function(name)
     {
@@ -1406,6 +1411,7 @@ var view = baseClass.extend({
         }
         var exp = /{=\s*([^}]+)\s*=}/g
         var placeholders = html.match(exp);
+        var $scope = this.data;
         for (let key in placeholders) 
         {
             if (placeholders.hasOwnProperty(key)) 
@@ -1449,6 +1455,8 @@ var view = baseClass.extend({
         if (typeof value == "undefined")
         {
             debugger;
+            _self.log("Undefined Value Passed to _applyValue");
+            return;
         }
         if (typeof value == "string" && el.tagName == "DIV" && value.indexOf("<") == -1) //Ignore anything that looks like HTML
         {
@@ -1470,6 +1478,12 @@ var view = baseClass.extend({
         }
         else if (attr == "html")
         {
+            if (typeof value == "object")
+            {
+                debugger;
+                _self.log("Object Value Passed to _applyValue");
+                return;
+            }
             if (value.toString().indexOf("<") == -1)
                 value = value.toString().replaceAll("\n","<br/>");
             $(el).html(value);
@@ -1840,7 +1854,12 @@ component = baseClass.extend({
         this._id = options.id || this.guid();
 
         if (this._model == null)
-            this._model = new model({ }, {  name:this._id });            
+            this._model = new model({ }, {  name:this._id });  
+
+        if (this._view == null)
+            this._view = new view("", {  name:this._id });   
+        else if (typeof _view == "string")                     
+            this._view = new view(_view, {  name:this._id });  
 
         // attach this component to the main app so it available globally
         if ( _core ) 
@@ -1854,6 +1873,7 @@ component = baseClass.extend({
             (sender, arg) =>
             {
                 _self._view._binds(arg.data,arg.prop,arg.value);
+                /*
                 try
                 {
                     $('select:not(.ms)').selectpicker('refresh');
@@ -1861,6 +1881,7 @@ component = baseClass.extend({
                 catch(e)
                 {
                 }
+                */
                 if (_self._ondatachange) 
                 {
                     _self._ondatachange.call(_self,arg.prop,arg.value,arg.data);
@@ -1922,6 +1943,40 @@ component = baseClass.extend({
                     var el = $(_self._view._element).find(name); 
                     $(el).each(function(index)
                     {
+                        $(el[index].attributes).each(function(idx,attr)
+                        {
+                            comp.getModel().set(attr.name,attr.value);
+                        });
+                        comp.render(el[index],false,false);   
+                    });
+                });
+                resolve();
+            }
+            catch(e)
+            {
+                reject(e); 
+            }    
+        });    
+    },
+    elements:function()
+    {
+        var _self = this;
+        return new Promise((resolve, reject) => {
+            try
+            {
+                $.each(_core.elements,function(name,value)
+                {
+                    if (name == _self._id) return;
+                    let element = _core.elements[name];
+                    var el = $(_self._view._element).find(name); 
+                    $(el).each(function(index)
+                    {
+                        var comp = $engine.createComponent(element.model,element.view,element.options);
+                        $(el[index].attributes).each(function(idx,attr)
+                        {
+                            comp.getModel().set(attr.name,attr.value);
+                        });
+                        $engine.attachComponent(name+"_"+index,comp);
                         comp.render(el[index],false,false);   
                     });
                 });
@@ -1961,6 +2016,7 @@ component = baseClass.extend({
                             }
                             if ( _self.onrender)
                                 _self.onrender.call(_self,element);
+                            _self.elements();
                             resolve(element);
                         });
                     });
@@ -2172,6 +2228,11 @@ var engine = baseClass.extend({
     createComponent:function(model,view,options)
     {
         return new component(model,view,options);
+    },
+    registerElement:function(name, _model, _view, _options)
+    {
+        _core.elements[name] = { model: _model, view: _view, options: _options };
+        return _core.elements[name];
     },
     isAttachedComponent:function(_component)
     {

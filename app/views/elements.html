@@ -1,0 +1,84 @@
+<section class="en-fullpage fixed-page en-yscroll elements" en-view="inactive">
+    <div class="row p-t-50 margin-0">
+        <div class="col-md-12">
+            Engine JS includes elements, these are components except they only get created then the element tag is found.<br>
+            <br>
+            So why elements<br>
+            <ul>
+                <li>An element can be created more than once in your app. Using the same code</li>
+                <li>Passing attributes to the element tag allows each instance to be unique</li>
+                <li>Two-way data binding still applies</li>
+            </ul>
+            <pre>
+Elements are registered.
+
+$engine.registerElement("myElementName",model, view, options);
+
+To use the element simply include the element name as a HTML tag.
+
+&lt;myElementName&gt;&lt;/myElementName&gt;
+
+or to pass attributes use...
+
+&lt;myElementName index="0"&gt;&lt;/myElementName&gt;
+&lt;myElementName index="1"&gt;&lt;/myElementName&gt;
+            </pre>
+            <br>
+            registerElement parameters:<br>
+            <br>
+            <div class="row m-b-10">
+                <div class="col-md-2">
+                    NAME
+                </div>
+                <div class="col-md-6">
+                    Any user definded name that will be later used in the HTML of a view.
+                </div>
+            </div>
+            <div class="row m-b-10">
+                <div class="col-md-2">
+                    MODEL
+                </div>
+                <div class="col-md-6">
+                    A standard EngineJS model. If null is pass an empty model is created. Any HTML element attributes are added to the model so they can used in the newely created component.
+                </div>
+            </div>
+            <div class="row m-b-10">
+                <div class="col-md-2">
+                    VIEW
+                </div>
+                <div class="col-md-8">
+                    A standard EngineJS view. If a string (containing HTML) is pass an view based on the string is created.
+                </div>
+            </div>
+            <div class="row m-b-10">
+                <div class="col-md-2">
+                    OPTIONS
+                </div>
+                <div class="col-md-8">
+                    A JSON object including and methods.<br>
+                    <pre>
+{
+    methods: {
+        onrender:function()
+        {
+
+        }
+    }
+}
+                    </pre><br>
+                    We don't recomment passing an id in the options JSON. A unique one will be issued for each instance.<br>
+                    <br>
+                    Example based on the category model.<br>
+                    <br>
+                    <pre>
+$engine.registerElement("myElement",categoryModel,"<span>{= $scope.data[$scope.index].text =}</span>",{});
+                    </pre><br>
+                    <pre>&lt;myElement index="0"&gt;&lt;/myElement&gt;</pre>
+                    Element 1 [<myElement index="0"></myElement>]<br>
+                    <pre>&lt;myElement index="1"&gt;&lt;/myElement&gt;</pre>
+                    Element 2 [<myElement index="1"></myElement>]
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
