@@ -574,14 +574,14 @@ var baseClass = Class.extend({
         if (padding == null) padding = " ";
         if (padding == "") return text;
         if (!width) return text;
-        return (width <= text.length) ? text : idev.utils.padl(padding + text, width, padding)
+        return (width <= text.length) ? text : str_pad(padding + text, width, padding,'STR_PAD_LEFT');
     },
     padr:function(text, width, padding)
     {
         if (padding == null) padding = " ";
         if (padding == "") return string;
         if (!width) return text;
-        return (width <= text.length) ? text : idev.utils.padr(text + padding, width, padding)
+        return (width <= text.length) ? text : str_pad(padding + text, width, padding,'STR_PAD_RIGHT');
     },
     toPromise:function(cb)
     {
