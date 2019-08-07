@@ -1341,7 +1341,7 @@ var view = baseClass.extend({
         {
             if (typeof _self._controller.beforeDataRender == "function")
             {
-                output += _self._controller.beforeDataRender();
+                output += _self._controller.beforeDataRender() || "";
             }
             if (typeof _self._controller.dataRender == "function")
             {
