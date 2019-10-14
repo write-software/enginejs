@@ -2,7 +2,7 @@
  *
  * The author of this software is Steve Egginton.
  *
- * Copyright (c) 2018 The Write Software Company Limited.
+ * Copyright (c) 2018-2019 The Write Software Company Limited.
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose without fee is hereby granted, provided that this entire notice
@@ -27,7 +27,7 @@
     Config
         verbose : Report in the console window the name of each script loaded
         strict  : Controls how INCLUDE handles load errors (404 not found), 
-                  with strict set to true the loading process will stop other it will
+                  with strict set to true the loading process will stop otherwise it will
                   just report the error.
         devmode : Adds a querystring with a unique number to force a fresh of the file.
         paths   : A group of keys for source paths internal use only
@@ -56,17 +56,16 @@ include.config = {
 
 function loadJSON(fnJSON,callback) {   
 
-    var ifrm = document.createElement("iframe");
-    ifrm.setAttribute("src", fnJSON);
-    ifrm.style.width = "0px";
-    ifrm.style.height = "0px";
-    ifrm.onload = function()
-    {
-        var data = JSON.parse(ifrm.contentWindow.document.body.innerText);
-        callback(data);
-        document.body.removeChild(ifrm);
-    }
-    document.body.appendChild(ifrm);
+    var xobj = new XMLHttpRequest();
+        xobj.overrideMimeType("application/json");
+    xobj.open('GET', fnJSON, true); // Replace 'my_data' with the path to your file
+    xobj.onreadystatechange = function () {
+          if (xobj.readyState == 4 && xobj.status == "200") {
+            // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
+            callback( JSON.parse(xobj.responseText) );
+          }
+    };
+    xobj.send(null);
  }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -83,12 +82,17 @@ function loadJSON(fnJSON,callback) {
 
 function include(scripts, callback)
 {
+    var list = scripts;
     var loaded = 0;
     if (typeof scripts == "string") return;
-    var fnLoaded =  function()
+    var fnLoaded =  function(script)
     {
+        if (script.target.src)
+            console.log(include.config.indent + "LOADED CODE:" + script.target.src);
+        else
+            console.log(include.config.indent + "LOADED CODE:" + script.target.href);
         loaded++;
-        if (loaded == scripts.length && callback) callback();
+        if (loaded == list.length && callback) callback();
     }
     var fnLoadError = function(oError)
     {
@@ -96,7 +100,7 @@ function include(scripts, callback)
         if (!include.config.strict)
         {
             loaded++;
-            if (loaded == scripts.length && callback) callback();                
+            if (loaded == list.length && callback) callback();                
         }
     }
 
@@ -122,8 +126,7 @@ function include(scripts, callback)
             var script = document.createElement('link');
             script.type = 'text/css';
             script.rel = 'stylesheet'; 
-            if (include.config.devmode)
-                url += "?refresh=" + Date.now();
+            script.async = true;
             script.href = url;       
         }
         else
@@ -131,9 +134,8 @@ function include(scripts, callback)
             // Adding the script tag to the head as suggested before
             var script = document.createElement('script');
             script.type = 'text/javascript';
+            script.async = true;
             if (url.indexOf(".js") == -1) url += ".js";
-            if (include.config.devmode)
-                url += "?refresh=" + Date.now();
             if (!include.config.devmode)
                 script.src = "./production.php?js=" + url;
             else
@@ -169,7 +171,7 @@ function include(scripts, callback)
         paths : Option JSON object with key paths
 */
 ////////////////////////////////////////////////////////////////////////////
-function loader(package,paths)
+function loader(package,paths, callback)
 {
     var scripts = [];
     var sLoadText = "Loading";
@@ -185,6 +187,7 @@ function loader(package,paths)
     }
     if (package.exclude)
     {
+        if (callback) callback();
         return;
     }
     if (paths)
@@ -203,15 +206,24 @@ function loader(package,paths)
     }
     function load(index)
     {
-        if (index == scripts.length) return;
+        // Load each entry in t he package block
+        if (index == 0)
+            include.config.indent += "    ";
+        if (index == scripts.length)
+        {
+            include.config.indent = include.config.indent.substr(0,include.config.indent.length-4);
+            if (callback) callback();
+            return;
+        }
         if (package.production)
         {
             include.config.devmode = false;
         }
         if (!Array.isArray(scripts[index]))
         {
-            loader(scripts[index]);
-            load(index+1);
+            loader(scripts[index],null,() =>{
+                load(index+1);
+            });
         }
         else 
             include(scripts[index],function()
@@ -220,7 +232,5 @@ function loader(package,paths)
             });
         include.config.devmode = true; 
     }
-    include.config.indent += "    ";
     load(0);  
-    include.config.indent = include.config.indent.substr(0,include.config.indent.length-4);
 }

@@ -1534,6 +1534,8 @@ var view = baseClass.extend({
                     let sProp = "";
                     let obj = "";
                     let dot = sBind.indexOf(".");
+                    let value = "";
+
                     if (dot != -1)
                         sProp = sBind.substr(dot+1);
                     else
@@ -1577,14 +1579,6 @@ var view = baseClass.extend({
                                 }    
                             }   
                         }
-                    }
-                    else
-                    {
-                        sBind = "_self.model." + sBind;
-                    }
-                    try
-                    {
-                        let value = "";
                         try
                         {
                             value = eval(sBind);
@@ -1593,6 +1587,13 @@ var view = baseClass.extend({
                         {
                             value = "";                    
                         }
+                    }
+                    else
+                    {
+                        value = _self.model[sBind];
+                    }
+                    try
+                    {
                         if ($.isArray(value))
                         {
                             value = _self._buildHTML(value,sProp,el);
